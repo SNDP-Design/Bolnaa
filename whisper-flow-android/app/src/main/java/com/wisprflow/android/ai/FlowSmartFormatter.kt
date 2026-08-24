@@ -124,6 +124,7 @@ class FlowSmartFormatter(
                 .post(requestJson.toRequestBody("application/json".toMediaType()))
                 .build()
 
+            var apiResult: String? = null
             httpClient.newCall(request).execute().use { response ->
                 val body = response.body?.string() ?: ""
                 if (response.isSuccessful) {
@@ -131,12 +132,13 @@ class FlowSmartFormatter(
                     val result = parsed.choices.firstOrNull()?.message?.content?.trim()
                     if (!result.isNullOrBlank()) {
                         // Strip any outer wrapping quotes if the model wrapped it
-                        return result.removeSurrounding("\"").removeSurrounding("'")
+                        apiResult = result.removeSurrounding("\"").removeSurrounding("'")
                     }
                 } else {
                     Log.w(TAG, "Chat API failed: ${response.code} $body")
                 }
             }
+            if (apiResult != null) return apiResult
         } catch (e: Exception) {
             Log.w(TAG, "Error invoking Chat API formatter", e)
         }

@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wisprflow.android.data.PreferencesManager
 import com.wisprflow.android.data.models.SttEngine
 import com.wisprflow.android.ui.theme.*
