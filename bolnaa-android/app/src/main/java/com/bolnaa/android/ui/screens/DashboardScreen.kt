@@ -367,87 +367,57 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2.dp.toPx())
         )
 
-        val cx = w / 2f
-        val cy = h / 2f
         val scale = w / 108f
+        val strokeW = 6f * scale
 
-        // Microphone capsule
-        val micW = 16f * scale
-        val micH = 27f * scale
-        drawRoundRect(
-            color = Color.White,
-            topLeft = androidx.compose.ui.geometry.Offset(cx - micW / 2, cy - micH / 2 - 3 * scale),
-            size = androidx.compose.ui.geometry.Size(micW, micH),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(micW / 2, micW / 2)
-        )
-
-        // U-Cradle
-        val strokeWidth = 3.2f * scale
-        val cradlePath = androidx.compose.ui.graphics.Path().apply {
-            val cradleR = 13f * scale
-            addArc(
-                oval = androidx.compose.ui.geometry.Rect(cx - cradleR, cy - cradleR - 2 * scale, cx + cradleR, cy + cradleR - 2 * scale),
-                startAngleDegrees = 0f,
-                sweepAngleDegrees = 180f
-            )
-        }
-        drawPath(
-            path = cradlePath,
-            color = Color.White,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                width = strokeWidth,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
-        )
-
-        // Stand & base
+        // 6 Soundwave Frequency Bars
+        // Bar 1 (Left Short)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(cx, cy + 11f * scale),
-            end = androidx.compose.ui.geometry.Offset(cx, cy + 20f * scale),
-            strokeWidth = strokeWidth,
+            start = androidx.compose.ui.geometry.Offset(24f * scale, 44f * scale),
+            end = androidx.compose.ui.geometry.Offset(24f * scale, 64f * scale),
+            strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
+        // Bar 2 (Medium-Tall)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(cx - 8f * scale, cy + 20f * scale),
-            end = androidx.compose.ui.geometry.Offset(cx + 8f * scale, cy + 20f * scale),
-            strokeWidth = strokeWidth,
+            start = androidx.compose.ui.geometry.Offset(36f * scale, 30f * scale),
+            end = androidx.compose.ui.geometry.Offset(36f * scale, 78f * scale),
+            strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
-
-        // Left soundwave arc
-        val leftWave = androidx.compose.ui.graphics.Path().apply {
-            moveTo(cx - 21f * scale, cy - 8f * scale)
-            quadraticBezierTo(
-                cx - 25f * scale, cy + 1f * scale,
-                cx - 21f * scale, cy + 10f * scale
-            )
-        }
-        drawPath(
-            path = leftWave,
+        // Bar 3 (Tallest Peak)
+        drawLine(
             color = Color.White,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                width = strokeWidth,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
+            start = androidx.compose.ui.geometry.Offset(48f * scale, 20f * scale),
+            end = androidx.compose.ui.geometry.Offset(48f * scale, 88f * scale),
+            strokeWidth = strokeW,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
-
-        // Right soundwave arc
-        val rightWave = androidx.compose.ui.graphics.Path().apply {
-            moveTo(cx + 21f * scale, cy - 8f * scale)
-            quadraticBezierTo(
-                cx + 25f * scale, cy + 1f * scale,
-                cx + 21f * scale, cy + 10f * scale
-            )
-        }
-        drawPath(
-            path = rightWave,
+        // Bar 4 (Center-Right Medium)
+        drawLine(
             color = Color.White,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                width = strokeWidth,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
+            start = androidx.compose.ui.geometry.Offset(60f * scale, 36f * scale),
+            end = androidx.compose.ui.geometry.Offset(60f * scale, 72f * scale),
+            strokeWidth = strokeW,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        // Bar 5 (Tall)
+        drawLine(
+            color = Color.White,
+            start = androidx.compose.ui.geometry.Offset(72f * scale, 29f * scale),
+            end = androidx.compose.ui.geometry.Offset(72f * scale, 79f * scale),
+            strokeWidth = strokeW,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        // Bar 6 (Right Short)
+        drawLine(
+            color = Color.White,
+            start = androidx.compose.ui.geometry.Offset(84f * scale, 42f * scale),
+            end = androidx.compose.ui.geometry.Offset(84f * scale, 66f * scale),
+            strokeWidth = strokeW,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
     }
 }

@@ -289,51 +289,27 @@ class FloatingBubbleView @JvmOverloads constructor(
     }
 
     private fun drawIdleState(canvas: Canvas, w: Float, h: Float) {
-        val cx = w / 2f
-        val cy = h / 2f
         val scale = w / 108f
-
-        // Draw Bolnaa Mic + Waveform silhouette matching app icon & home screen
-        val whiteFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            style = Paint.Style.FILL
-        }
-
         val whiteStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.STROKE
-            strokeWidth = 3.2f * scale
+            strokeWidth = 6f * scale
             strokeCap = Paint.Cap.ROUND
         }
 
-        // Center mic capsule
-        val micW = 16f * scale
-        val micH = 27f * scale
-        val micRect = RectF(cx - micW / 2, cy - micH / 2 - 3 * scale, cx + micW / 2, cy + micH / 2 - 3 * scale)
-        canvas.drawRoundRect(micRect, micW / 2, micW / 2, whiteFill)
-
-        // Mic U-cradle
-        val cradleR = 13f * scale
-        val cradleRect = RectF(cx - cradleR, cy - cradleR - 2 * scale, cx + cradleR, cy + cradleR - 2 * scale)
-        canvas.drawArc(cradleRect, 0f, 180f, false, whiteStroke)
-
-        // Mic stand & base
-        canvas.drawLine(cx, cy + 11f * scale, cx, cy + 20f * scale, whiteStroke)
-        canvas.drawLine(cx - 8f * scale, cy + 20f * scale, cx + 8f * scale, cy + 20f * scale, whiteStroke)
-
-        // Left audio sound wave arc
-        val leftPath = Path().apply {
-            moveTo(cx - 21f * scale, cy - 8f * scale)
-            quadTo(cx - 25f * scale, cy + 1f * scale, cx - 21f * scale, cy + 10f * scale)
-        }
-        canvas.drawPath(leftPath, whiteStroke)
-
-        // Right audio sound wave arc
-        val rightPath = Path().apply {
-            moveTo(cx + 21f * scale, cy - 8f * scale)
-            quadTo(cx + 25f * scale, cy + 1f * scale, cx + 21f * scale, cy + 10f * scale)
-        }
-        canvas.drawPath(rightPath, whiteStroke)
+        // 6 Soundwave Frequency Bars
+        // Bar 1 (Left Short)
+        canvas.drawLine(24f * scale, 44f * scale, 24f * scale, 64f * scale, whiteStroke)
+        // Bar 2 (Medium-Tall)
+        canvas.drawLine(36f * scale, 30f * scale, 36f * scale, 78f * scale, whiteStroke)
+        // Bar 3 (Tallest Peak)
+        canvas.drawLine(48f * scale, 20f * scale, 48f * scale, 88f * scale, whiteStroke)
+        // Bar 4 (Center-Right Medium)
+        canvas.drawLine(60f * scale, 36f * scale, 60f * scale, 72f * scale, whiteStroke)
+        // Bar 5 (Tall)
+        canvas.drawLine(72f * scale, 29f * scale, 72f * scale, 79f * scale, whiteStroke)
+        // Bar 6 (Right Short)
+        canvas.drawLine(84f * scale, 42f * scale, 84f * scale, 66f * scale, whiteStroke)
     }
 
     private fun drawListeningState(canvas: Canvas, w: Float, h: Float) {
