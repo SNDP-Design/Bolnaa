@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -413,6 +414,28 @@ fun SettingsScreen(
                             )
                         )
                     }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
+
+                    // Free Placement anywhere toggle
+                    val isFreePlacement by preferencesManager.isFreePlacementEnabled.collectAsState(initial = true)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Place Anywhere on Screen", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
+                            Text("Drag and drop the bubble anywhere freely on your screen without forced edge-snapping", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                        }
+                        Switch(
+                            checked = isFreePlacement,
+                            onCheckedChange = { coroutineScope.launch { preferencesManager.setFreePlacementEnabled(it) } },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
+                        )
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
 
                     // Haptics toggle
                     Row(

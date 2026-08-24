@@ -29,6 +29,9 @@ class PreferencesManager(private val context: Context) {
         private val KEY_ATTACH_TO_KEYBOARD = booleanPreferencesKey("attach_to_keyboard")
         private val KEY_CUSTOM_VOCABULARY = stringPreferencesKey("custom_vocabulary")
         private val KEY_SERVICE_ACTIVE = booleanPreferencesKey("service_active")
+        private val KEY_BUBBLE_POS_X = intPreferencesKey("bubble_pos_x")
+        private val KEY_BUBBLE_POS_Y = intPreferencesKey("bubble_pos_y")
+        private val KEY_FREE_PLACEMENT = booleanPreferencesKey("free_placement")
     }
 
     val groqApiKey: Flow<String> = context.dataStore.data
@@ -81,6 +84,18 @@ class PreferencesManager(private val context: Context) {
         .catch { handleException(it) }
         .map { it[KEY_ATTACH_TO_KEYBOARD] ?: true }
 
+    val isFreePlacementEnabled: Flow<Boolean> = context.dataStore.data
+        .catch { handleException(it) }
+        .map { it[KEY_FREE_PLACEMENT] ?: true }
+
+    val bubblePosX: Flow<Int> = context.dataStore.data
+        .catch { handleException(it) }
+        .map { it[KEY_BUBBLE_POS_X] ?: -1 }
+
+    val bubblePosY: Flow<Int> = context.dataStore.data
+        .catch { handleException(it) }
+        .map { it[KEY_BUBBLE_POS_Y] ?: -1 }
+
     val customVocabulary: Flow<String> = context.dataStore.data
         .catch { handleException(it) }
         .map { it[KEY_CUSTOM_VOCABULARY] ?: "" }
@@ -88,6 +103,17 @@ class PreferencesManager(private val context: Context) {
     val isServiceActive: Flow<Boolean> = context.dataStore.data
         .catch { handleException(it) }
         .map { it[KEY_SERVICE_ACTIVE] ?: false }
+
+    suspend fun setBubblePosition(x: Int, y: Int) {
+        context.dataStore.edit {
+            it[KEY_BUBBLE_POS_X] = x
+            it[KEY_BUBBLE_POS_Y] = y
+        }
+    }
+
+    suspend fun setFreePlacementEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_FREE_PLACEMENT] = enabled }
+    }
 
     suspend fun setGroqApiKey(key: String) {
         context.dataStore.edit { it[KEY_GROQ_API_KEY] = key.trim() }

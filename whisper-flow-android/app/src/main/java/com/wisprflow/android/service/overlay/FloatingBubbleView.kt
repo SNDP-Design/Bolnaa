@@ -353,8 +353,13 @@ class FloatingBubbleView @JvmOverloads constructor(
         canvas.drawText("Retry", cx, cy + 4 * density, textPaint)
     }
 
+    var isFreePlacementEnabled: Boolean = true
+    var onPositionChanged: ((Int, Int) -> Unit)? = null
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val params = layoutParamsWindowManager ?: return super.onTouchEvent(event)
+        val displayWidth = resources.displayMetrics.widthPixels
+        val displayHeight = resources.displayMetrics.heightPixels
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -368,12 +373,12 @@ class FloatingBubbleView @JvmOverloads constructor(
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.rawX - initialTouchX
                 val dy = event.rawY - initialTouchY
-                if (!isDragging && (Math.abs(dx) > touchSlop || Math.abs(dy) > touchSlop)) {
+                if (!isDragging && (kotlin.math.abs(dx) > touchSlop || kotlin.math.abs(dy) > touchSlop)) {
                     isDragging = true
                 }
                 if (isDragging) {
-                    params.x = (initialX + dx).toInt()
-                    params.y = (initialY + dy).toInt()
+                    params.x = (initialX + dx).toInt().coerceIn(0, (displayWidth - width).coerceAtLeast(0))
+                    params.y = (initialY + dy).toInt().coerceIn(0, (displayHeight - height).coerceAtLeast(0))
                     try {
                         windowManager.updateViewLayout(this, params)
                     } catch (e: Exception) {
@@ -388,7 +393,20 @@ class FloatingBubbleView @JvmOverloads constructor(
                     performClick()
                     onBubbleClick?.invoke()
                 } else {
-                    snapToEdge(params)
+                    if (isFreePlacementEnabled) {
+                        val finalX = params.x.coerceIn(8, (displayWidth - width - 8).coerceAtLeast(8))
+                        val finalY = params.y.coerceIn(32, (displayHeight - height - 32).coerceAtLeast(32))
+                        params.x = finalX
+                        params.y = finalY
+                        try {
+                            windowManager.updateViewLayout(this, params)
+                        } catch (e: Exception) {
+                            // Ignore
+                        }
+                        onPositionChanged?.invoke(finalX, finalY)
+                    } else {
+                        snapToEdge(params)
+                    }
                 }
                 return true
             }
@@ -414,6 +432,7 @@ class FloatingBubbleView @JvmOverloads constructor(
             }
         }
         animator.start()
+        onPositionChanged?.invoke(targetX, params.y)
     }
 
     override fun performClick(): Boolean {

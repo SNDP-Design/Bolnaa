@@ -159,6 +159,11 @@ class FlowOverlayService : Service() {
         bubbleView = FloatingBubbleView(this).apply {
             layoutParamsWindowManager = params
             onBubbleClick = { handleBubbleClick() }
+            onPositionChanged = { x, y ->
+                serviceScope.launch {
+                    preferencesManager.setBubblePosition(x, y)
+                }
+            }
             // Start hidden if attach to keyboard is enabled
             visibility = android.view.View.GONE
             alpha = 0f
@@ -188,6 +193,11 @@ class FlowOverlayService : Service() {
             preferencesManager.isAttachToKeyboardEnabled.collect { enabled ->
                 isKeyboardOnlyMode = enabled
                 updateBubbleVisibility(FlowAccessibilityService.isKeyboardVisibleFlow.value)
+            }
+        }
+        serviceScope.launch {
+            preferencesManager.isFreePlacementEnabled.collect { enabled ->
+                bubbleView?.isFreePlacementEnabled = enabled
             }
         }
         serviceScope.launch {
