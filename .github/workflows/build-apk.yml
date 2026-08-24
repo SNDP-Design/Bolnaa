@@ -3,9 +3,6 @@ name: Build & Release Bolnaa APK
 on:
   push:
     branches: [ "main", "master" ]
-    paths:
-      - 'whisper-flow-android/**'
-      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,6 +16,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -26,8 +25,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle Cache
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.6'
 
       - name: Grant execute permission for gradlew
         run: chmod +x whisper-flow-android/gradlew
@@ -36,7 +37,7 @@ jobs:
         working-directory: whisper-flow-android
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Rename & Prepare APKs
+      - name: Prepare APK Outputs
         run: |
           mkdir -p build-output
           cp whisper-flow-android/app/build/outputs/apk/debug/app-debug.apk build-output/bolnaa.apk
@@ -49,15 +50,22 @@ jobs:
           path: build-output/bolnaa.apk
           retention-days: 30
 
-      - name: Create or Update GitHub Release (Live Download Link)
+      - name: Delete old release tag if exists
+        continue-on-error: true
+        run: |
+          git tag -d latest || true
+          git push origin :refs/tags/latest || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish GitHub Release (Direct Download)
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
           tag_name: latest
           name: "Bolnaa Latest Build"
           body: |
-            ### 🎙️ Bolnaa Latest Build
-            - Built automatically from commit: `${{ github.sha }}`
+            ### 🎙️ Bolnaa Latest Android Build
+            - Commit: `${{ github.sha }}`
             - **Download Bolnaa APK**: [bolnaa.apk](https://github.com/${{ github.repository }}/releases/download/latest/bolnaa.apk)
             
             #### How to Install:
@@ -66,6 +74,7 @@ jobs:
             3. Future updates pushed here will automatically update the app over-the-air!
           draft: false
           prerelease: false
+          make_latest: true
           files: |
             build-output/bolnaa.apk
             build-output/whisper-flow.apk
