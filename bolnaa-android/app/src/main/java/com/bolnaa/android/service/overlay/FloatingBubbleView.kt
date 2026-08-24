@@ -48,18 +48,18 @@ class FloatingBubbleView @JvmOverloads constructor(
 
     // Paints
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#181824")
+        color = Color.parseColor("#121212")
         style = Paint.Style.FILL
     }
 
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#6366F1")
+        color = Color.parseColor("#3ECF8E")
         style = Paint.Style.STROKE
         strokeWidth = 2.5f * density
     }
 
     private val wavePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#8B5CF6")
+        color = Color.parseColor("#3ECF8E")
         style = Paint.Style.FILL
         strokeCap = Paint.Cap.ROUND
     }
@@ -243,12 +243,12 @@ class FloatingBubbleView @JvmOverloads constructor(
             )
             DictationState.PROCESSING -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#312E81"), Color.parseColor("#6366F1")),
+                intArrayOf(Color.parseColor("#064E3B"), Color.parseColor("#3ECF8E")),
                 null, Shader.TileMode.CLAMP
             )
             DictationState.SUCCESS -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#064E3B"), Color.parseColor("#10B981")),
+                intArrayOf(Color.parseColor("#065F46"), Color.parseColor("#3ECF8E")),
                 null, Shader.TileMode.CLAMP
             )
             DictationState.ERROR -> LinearGradient(
@@ -258,7 +258,7 @@ class FloatingBubbleView @JvmOverloads constructor(
             )
             else -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#7C3AED"), Color.parseColor("#6366F1"), Color.parseColor("#4338CA")),
+                intArrayOf(Color.parseColor("#3ECF8E"), Color.parseColor("#24B47E"), Color.parseColor("#059669")),
                 null, Shader.TileMode.CLAMP
             )
         }
@@ -267,10 +267,10 @@ class FloatingBubbleView @JvmOverloads constructor(
 
         when (state) {
             DictationState.LISTENING -> borderPaint.color = Color.parseColor("#FDA4AF")
-            DictationState.PROCESSING -> borderPaint.color = Color.parseColor("#C7D2FE")
+            DictationState.PROCESSING -> borderPaint.color = Color.parseColor("#A7F3D0")
             DictationState.SUCCESS -> borderPaint.color = Color.parseColor("#6EE7B7")
             DictationState.ERROR -> borderPaint.color = Color.parseColor("#FCA5A5")
-            else -> borderPaint.color = Color.parseColor("#A5B4FC")
+            else -> borderPaint.color = Color.parseColor("#6EE7B7")
         }
 
         val strokeOffset = borderPaint.strokeWidth / 2f
@@ -361,7 +361,7 @@ class FloatingBubbleView @JvmOverloads constructor(
         val cx = w / 2f
         val cy = h / 2f
 
-        textPaint.color = Color.parseColor("#A5B4FC")
+        textPaint.color = Color.parseColor("#A7F3D0")
         canvas.drawText("Flowing...", cx, cy + 4 * density, textPaint)
     }
 
@@ -370,7 +370,7 @@ class FloatingBubbleView @JvmOverloads constructor(
         val cy = h / 2f
 
         val checkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#10B981")
+            color = Color.parseColor("#3ECF8E")
             style = Paint.Style.STROKE
             strokeWidth = 3f * density
             strokeCap = Paint.Cap.ROUND

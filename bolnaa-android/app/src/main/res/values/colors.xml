@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_80">#D0BCFF</color>
-    <color name="purple_grey_80">#CCC2DC</color>
-    <color name="pink_80">#EFB8C8</color>
-
-    <color name="purple_40">#6650a4</color>
-    <color name="purple_grey_40">#625b71</color>
-    <color name="pink_40">#7D5260</color>
-
-    <!-- Bolnaa Palette -->
-    <color name="flow_background">#0F0F14</color>
-    <color name="flow_surface">#181824</color>
-    <color name="flow_surface_variant">#222234</color>
-    <color name="flow_primary">#6366F1</color>
-    <color name="flow_accent">#8B5CF6</color>
-    <color name="flow_listening">#EF4444</color>
-    <color name="flow_success">#10B981</color>
+    <!-- Supabase Dark Theme Palette -->
+    <color name="flow_background">#121212</color>
+    <color name="flow_surface">#1C1C1C</color>
+    <color name="flow_surface_variant">#242424</color>
+    <color name="flow_primary">#3ECF8E</color>
+    <color name="flow_accent">#24B47E</color>
+    <color name="flow_listening">#F43F5E</color>
+    <color name="flow_success">#3ECF8E</color>
 </resources>

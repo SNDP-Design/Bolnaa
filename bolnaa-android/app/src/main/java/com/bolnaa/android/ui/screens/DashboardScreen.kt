@@ -353,7 +353,7 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
         // Squircle gradient background
         drawRoundRect(
             brush = Brush.linearGradient(
-                colors = listOf(Color(0xFF7C3AED), Color(0xFF6366F1), Color(0xFF4338CA)),
+                colors = listOf(Color(0xFF3ECF8E), Color(0xFF24B47E), Color(0xFF059669)),
                 start = androidx.compose.ui.geometry.Offset(0f, 0f),
                 end = androidx.compose.ui.geometry.Offset(w, h)
             ),
@@ -362,7 +362,7 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
 
         // Subtle glowing border
         drawRoundRect(
-            color = Color(0xFFA5B4FC).copy(alpha = 0.6f),
+            color = Color(0xFF6EE7B7).copy(alpha = 0.5f),
             cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius),
             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2.dp.toPx())
         )

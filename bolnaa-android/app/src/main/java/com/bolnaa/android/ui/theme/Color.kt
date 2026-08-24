@@ -2,25 +2,27 @@ package com.bolnaa.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val FlowBg = Color(0xFF0C0D14)
-val FlowSurface = Color(0xFF161722)
-val FlowSurfaceVariant = Color(0xFF1E2030)
-val FlowSurfaceElevated = Color(0xFF282A3E)
+// Supabase Studio Deep Dark Palette (supabase.com)
+val FlowBg = Color(0xFF121212)
+val FlowSurface = Color(0xFF1C1C1C)
+val FlowSurfaceVariant = Color(0xFF242424)
+val FlowSurfaceElevated = Color(0xFF2E2E2E)
 
-val FlowPrimary = Color(0xFF6366F1)
-val FlowPrimaryLight = Color(0xFF818CF8)
-val FlowSecondary = Color(0xFF8B5CF6)
-val FlowAccent = Color(0xFFA855F7)
+// Supabase Signature Emerald Brand System
+val FlowPrimary = Color(0xFF3ECF8E)
+val FlowPrimaryLight = Color(0xFF6EE7B7)
+val FlowSecondary = Color(0xFF24B47E)
+val FlowAccent = Color(0xFF3ECF8E)
 
-val FlowSuccess = Color(0xFF10B981)
+val FlowSuccess = Color(0xFF3ECF8E)
 val FlowError = Color(0xFFEF4444)
 val FlowListening = Color(0xFFF43F5E)
 val FlowWarning = Color(0xFFF59E0B)
 
-val FlowTextPrimary = Color(0xFFF8FAFC)
-val FlowTextSecondary = Color(0xFF94A3B8)
-val FlowTextMuted = Color(0xFF64748B)
+val FlowTextPrimary = Color(0xFFEDEDED)
+val FlowTextSecondary = Color(0xFFA1A1A1)
+val FlowTextMuted = Color(0xFF707070)
 
-val FlowBorder = Color(0xFF2E324B)
-val FlowCardGradientStart = Color(0xFF1A1B28)
-val FlowCardGradientEnd = Color(0xFF12131C)
+val FlowBorder = Color(0xFF2E2E2E)
+val FlowCardGradientStart = Color(0xFF1E1E1E)
+val FlowCardGradientEnd = Color(0xFF171717)
