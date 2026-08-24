@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
@@ -142,8 +143,36 @@ class FlowAccessibilityService : AccessibilityService() {
         Log.d(TAG, "Attempting text injection. Node: $targetNode, isEditable: ${targetNode?.isEditable}")
 
         if (targetNode != null && targetNode.isEditable) {
-            // Check if node supports ACTION_SET_TEXT
-            val existingText = targetNode.text?.toString() ?: ""
+            var existingText = targetNode.text?.toString() ?: ""
+
+            // 1. Check if node is explicitly showing hint text (Android 8.0+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && targetNode.isShowingHintText) {
+                existingText = ""
+            }
+
+            // 2. Check if existingText matches hintText
+            val hint = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                targetNode.hintText?.toString()?.trim()
+            } else null
+
+            if (!hint.isNullOrEmpty() && existingText.trim().equals(hint, ignoreCase = true)) {
+                existingText = ""
+            }
+
+            // 3. Filter out common placeholder texts across apps (WhatsApp "Message", "Type a message", etc.)
+            val cleanExisting = existingText.trim().lowercase()
+            val isPlaceholder = cleanExisting in setOf(
+                "message", "messages", "type a message", "type a message...",
+                "send a message", "send a message...", "write a message",
+                "write a message...", "start a message", "text message",
+                "search", "search...", "search or type web address",
+                "write a reply", "write a reply...", "add a comment",
+                "add a comment...", "comment...", "type something...", "ask a question..."
+            )
+            if (isPlaceholder) {
+                existingText = ""
+            }
+
             val arguments = Bundle().apply {
                 val newText = if (existingText.isNotEmpty() && !existingText.endsWith(" ")) {
                     "$existingText $text"
