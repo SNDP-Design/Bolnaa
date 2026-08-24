@@ -1,12 +1,14 @@
 package com.bolnaa.android
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.text.TextUtils
 import android.widget.Toast
@@ -26,7 +28,6 @@ import com.bolnaa.android.ui.screens.DashboardScreen
 import com.bolnaa.android.ui.screens.SetupWizardScreen
 import com.bolnaa.android.ui.theme.FlowBg
 import com.bolnaa.android.ui.theme.BolnaaTheme
-import kotlinx.coroutines.launch
 
 enum class Screen {
     DASHBOARD,
@@ -40,6 +41,8 @@ class MainActivity : ComponentActivity() {
     private var hasMicPermission by mutableStateOf(false)
     private var hasOverlayPermission by mutableStateOf(false)
     private var hasAccessibilityPermission by mutableStateOf(false)
+    private var hasBatteryOptimizationExempt by mutableStateOf(false)
+    private var hasAutostartVisited by mutableStateOf(false)
     private var isOverlayRunning by mutableStateOf(false)
 
     private val micPermissionLauncher = registerForActivityResult(
@@ -71,7 +74,6 @@ class MainActivity : ComponentActivity() {
                     color = FlowBg
                 ) {
                     var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
-                    val coroutineScope = rememberCoroutineScope()
 
                     AnimatedContent(
                         targetState = currentScreen,
@@ -95,9 +97,13 @@ class MainActivity : ComponentActivity() {
                                     isOverlayPermissionGranted = hasOverlayPermission,
                                     isAccessibilityPermissionGranted = hasAccessibilityPermission,
                                     isMicPermissionGranted = hasMicPermission,
+                                    isBatteryOptimizationExempt = hasBatteryOptimizationExempt,
+                                    isAutostartConfigured = hasAutostartVisited,
                                     onRequestMicPermission = { requestMicPermission() },
                                     onRequestOverlayPermission = { requestOverlayPermission() },
                                     onRequestAccessibilityPermission = { requestAccessibilityPermission() },
+                                    onRequestBatteryOptimization = { requestBatteryOptimization() },
+                                    onOpenAutostartSettings = { openAutostartSettings() },
                                     onBack = { currentScreen = Screen.DASHBOARD },
                                     onFinish = {
                                         startOverlayService()
@@ -133,6 +139,14 @@ class MainActivity : ComponentActivity() {
         }
 
         hasAccessibilityPermission = isAccessibilityServiceEnabled(this, FlowAccessibilityService::class.java)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+            hasBatteryOptimizationExempt = powerManager?.isIgnoringBatteryOptimizations(packageName) ?: false
+        } else {
+            hasBatteryOptimizationExempt = true
+        }
+
         isOverlayRunning = FlowOverlayService.isRunning
     }
 
@@ -154,6 +168,73 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
         startActivity(intent)
         Toast.makeText(this, "Enable 'Bolnaa' in Downloaded / Installed apps", Toast.LENGTH_LONG).show()
+    }
+
+    private fun requestBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:$packageName")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                try {
+                    val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    startActivity(fallbackIntent)
+                } catch (e2: Exception) {
+                    Toast.makeText(this, "Open App Info -> Battery -> Set to 'No restrictions'", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun openAutostartSettings() {
+        hasAutostartVisited = true
+        val intentList = listOf(
+            // Xiaomi / MIUI / HyperOS
+            Intent().setComponent(ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")),
+            Intent("miui.intent.action.OP_AUTO_START").addCategory(Intent.CATEGORY_DEFAULT),
+            // Huawei / Honor
+            Intent().setComponent(ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity")),
+            Intent().setComponent(ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.bootstart.BootStartActivity")),
+            // Oppo / Realme
+            Intent().setComponent(ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity")),
+            Intent().setComponent(ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity")),
+            // Vivo
+            Intent().setComponent(ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")),
+            Intent().setComponent(ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity")),
+            // Samsung
+            Intent().setComponent(ComponentName("com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity"))
+        )
+
+        var started = false
+        for (intent in intentList) {
+            try {
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                started = true
+                Toast.makeText(this, "Enable 'Bolnaa' in Autostart to stay active in background", Toast.LENGTH_LONG).show()
+                break
+            } catch (e: Exception) {
+                // Try next candidate
+            }
+        }
+
+        if (!started) {
+            try {
+                val appSettingsIntent = Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:$packageName")
+                ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+                startActivity(appSettingsIntent)
+                Toast.makeText(this, "Enable Autostart & Background Activity for Bolnaa", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Unable to open system autostart settings", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun startOverlayService() {

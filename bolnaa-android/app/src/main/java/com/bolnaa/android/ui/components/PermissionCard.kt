@@ -24,7 +24,8 @@ fun PermissionCard(
     icon: ImageVector,
     isGranted: Boolean,
     onGrantClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    buttonText: String = "Grant"
 ) {
     Surface(
         modifier = modifier
@@ -100,7 +101,7 @@ fun PermissionCard(
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text(text = "Grant", style = MaterialTheme.typography.labelLarge)
+                    Text(text = buttonText, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
