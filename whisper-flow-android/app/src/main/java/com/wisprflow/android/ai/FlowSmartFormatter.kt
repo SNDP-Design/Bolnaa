@@ -133,10 +133,13 @@ class FlowSmartFormatter(
                     if (!result.isNullOrBlank()) {
                         // Strip any outer wrapping quotes if the model wrapped it
                         apiResult = result.removeSurrounding("\"").removeSurrounding("'")
+                    } else {
+                        apiResult = null
                     }
                 } else {
                     Log.w(TAG, "Chat API failed: ${response.code} $body")
                 }
+                Unit
             }
             if (apiResult != null) return apiResult
         } catch (e: Exception) {
