@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Whisper Flow</string>
+    <string name="accessibility_service_label">Whisper Flow Direct Insertion</string>
+    <string name="accessibility_service_description">Enables Whisper Flow to detect the currently focused text field across your apps and automatically paste transcribed voice dictations.</string>
+    <string name="notification_channel_name">Whisper Flow Floating Service</string>
+    <string name="notification_channel_desc">Active floating dictation bubble indicator</string>
+    <string name="service_running_title">Whisper Flow is Active</string>
+    <string name="service_running_desc">Tap the floating bubble to dictate anywhere.</string>
+</resources>
