@@ -5,7 +5,7 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- 6-Bar Modern Voice Soundwave Logo Mark -->
+    <!-- 6 Soundwave Frequency Bars (Identical to in-app BolnaaLogoIcon) -->
     <!-- Bar 1 (Left Short) -->
     <path
         android:pathData="M24,44 L24,64"
