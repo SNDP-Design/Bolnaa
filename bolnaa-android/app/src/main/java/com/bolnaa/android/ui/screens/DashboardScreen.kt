@@ -419,7 +419,7 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
         // Left soundwave arc
         val leftWave = androidx.compose.ui.graphics.Path().apply {
             moveTo(cx - 21f * scale, cy - 8f * scale)
-            quadraticTo(
+            quadraticBezierTo(
                 cx - 25f * scale, cy + 1f * scale,
                 cx - 21f * scale, cy + 10f * scale
             )
@@ -436,7 +436,7 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
         // Right soundwave arc
         val rightWave = androidx.compose.ui.graphics.Path().apply {
             moveTo(cx + 21f * scale, cy - 8f * scale)
-            quadraticTo(
+            quadraticBezierTo(
                 cx + 25f * scale, cy + 1f * scale,
                 cx + 21f * scale, cy + 10f * scale
             )
