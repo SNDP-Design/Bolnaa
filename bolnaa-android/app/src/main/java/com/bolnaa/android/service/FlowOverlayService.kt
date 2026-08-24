@@ -281,6 +281,7 @@ class FlowOverlayService : Service() {
     private fun adjustBubblePositionAboveKeyboard(keyboardTopY: Int) {
         val bubble = bubbleView ?: return
         val params = bubble.layoutParamsWindowManager ?: return
+        val density = resources.displayMetrics.density
         val bubbleHeight = bubble.height.takeIf { it > 0 } ?: (72 * density).toInt()
         val targetY = (keyboardTopY - bubbleHeight - (12 * density).toInt()).coerceAtLeast(60)
 
