@@ -35,26 +35,16 @@ jobs:
 
       - name: Build Debug APK
         working-directory: whisper-flow-android
-        run: |
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee ../gradle_output.txt
-
-      - name: Publish Error Log if Build Fails
-        if: failure()
-        run: |
-          tail -n 250 gradle_output.txt > failure_summary.txt
-          echo "==================== BUILD ERROR OUTPUT ===================="
-          cat failure_summary.txt
-          echo "==========================================================="
-          gh release delete error-log --yes || true
-          gh release create error-log --title "Build Error Log" --notes-file failure_summary.txt || true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Prepare APK Outputs
         run: |
           mkdir -p build-output
-          cp whisper-flow-android/app/build/outputs/apk/debug/app-debug.apk build-output/bolnaa.apk
-          cp whisper-flow-android/app/build/outputs/apk/debug/app-debug.apk build-output/whisper-flow.apk
+          APK_PATH=$(find whisper-flow-android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          echo "Found generated APK at: $APK_PATH"
+          cp "$APK_PATH" build-output/bolnaa.apk
+          cp "$APK_PATH" build-output/whisper-flow.apk
+          ls -lh build-output/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
