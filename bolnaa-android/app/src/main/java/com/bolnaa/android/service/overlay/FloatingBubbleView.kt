@@ -7,6 +7,7 @@ import android.graphics.*
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -26,7 +27,12 @@ class FloatingBubbleView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    private val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    private val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        (context.applicationContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.applicationContext.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    }
 
     var layoutParamsWindowManager: WindowManager.LayoutParams? = null
 
@@ -185,18 +191,41 @@ class FloatingBubbleView @JvmOverloads constructor(
     }
 
     fun triggerHaptic(dictState: DictationState) {
-        if (vibrator == null) return
+        val v = vibrator ?: return
+        if (!v.hasVibrator()) return
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 when (dictState) {
-                    DictationState.LISTENING -> vibrator.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
-                    DictationState.SUCCESS -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 30, 50, 60), -1))
-                    DictationState.ERROR -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 80, 50, 80), -1))
+                    // Tap to start recording: single firm click (50ms, full amplitude)
+                    DictationState.LISTENING -> v.vibrate(
+                        VibrationEffect.createOneShot(50, 255)
+                    )
+                    // Text pasted successfully: two quick taps (dot-dot)
+                    DictationState.SUCCESS -> v.vibrate(
+                        VibrationEffect.createWaveform(
+                            longArrayOf(0, 50, 60, 50),
+                            intArrayOf(0, 255, 0, 200),
+                            -1
+                        )
+                    )
+                    // Error: long buzz
+                    DictationState.ERROR -> v.vibrate(
+                        VibrationEffect.createWaveform(
+                            longArrayOf(0, 100, 40, 100),
+                            intArrayOf(0, 255, 0, 255),
+                            -1
+                        )
+                    )
                     else -> {}
                 }
             } else {
                 @Suppress("DEPRECATION")
-                vibrator.vibrate(40)
+                when (dictState) {
+                    DictationState.LISTENING -> v.vibrate(50)
+                    DictationState.SUCCESS -> v.vibrate(longArrayOf(0, 50, 60, 50), -1)
+                    DictationState.ERROR -> v.vibrate(longArrayOf(0, 100, 40, 100), -1)
+                    else -> {}
+                }
             }
         } catch (e: Exception) {
             // Ignore vibration errors
