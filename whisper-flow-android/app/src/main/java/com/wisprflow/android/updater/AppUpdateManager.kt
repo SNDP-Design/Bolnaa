@@ -48,8 +48,8 @@ class AppUpdateManager(private val context: Context) {
 
     companion object {
         private const val TAG = "AppUpdateManager"
-        // Default GitHub repo endpoint or custom server endpoint
-        var GITHUB_REPO = "sndp-dev/whisper-flow" // Customizable by user
+        // Default GitHub repo endpoint for live OTA updates
+        var GITHUB_REPO = "SNDP-Design/Bolnaa"
     }
 
     private val json = Json { ignoreUnknownKeys = true }
