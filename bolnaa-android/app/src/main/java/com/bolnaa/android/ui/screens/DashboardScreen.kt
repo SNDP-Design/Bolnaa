@@ -36,8 +36,7 @@ fun DashboardScreen(
     isOverlayPermissionGranted: Boolean,
     isAccessibilityPermissionGranted: Boolean,
     isMicPermissionGranted: Boolean,
-    onOpenSetupWizard: () -> Unit,
-    onOpenPlayground: () -> Unit
+    onOpenSetupWizard: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -76,59 +75,37 @@ fun DashboardScreen(
         // --- Top Header ---
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .background(
-                            brush = Brush.linearGradient(listOf(FlowPrimary, FlowAccent)),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.GraphicEq,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "Bolnaa",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = FlowTextPrimary
-                    )
-                    Text(
-                        text = "AI Voice Dictation & Auto-Paste",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = FlowTextMuted
-                    )
-                }
-            }
-
-            // Test Playground Button
-            FilledTonalButton(
-                onClick = onOpenPlayground,
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = FlowSurfaceVariant,
-                    contentColor = FlowPrimary
-                ),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        brush = Brush.linearGradient(listOf(FlowPrimary, FlowAccent)),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.PlayArrow,
+                    imageVector = Icons.Default.GraphicEq,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "Try Mic", style = MaterialTheme.typography.labelMedium)
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "Bolnaa",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = FlowTextPrimary
+                )
+                Text(
+                    text = "AI Voice Dictation & Auto-Paste",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = FlowTextMuted
+                )
             }
         }
 

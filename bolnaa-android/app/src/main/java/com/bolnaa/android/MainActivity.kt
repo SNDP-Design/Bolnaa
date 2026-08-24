@@ -21,9 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.service.FlowAccessibilityService
-import com.bolnaa.android.service.FlowOverlayService
 import com.bolnaa.android.ui.screens.DashboardScreen
-import com.bolnaa.android.ui.screens.PlaygroundScreen
 import com.bolnaa.android.ui.screens.SetupWizardScreen
 import com.bolnaa.android.ui.theme.FlowBg
 import com.bolnaa.android.ui.theme.BolnaaTheme
@@ -31,8 +29,7 @@ import kotlinx.coroutines.launch
 
 enum class Screen {
     DASHBOARD,
-    SETUP_WIZARD,
-    PLAYGROUND
+    SETUP_WIZARD
 }
 
 class MainActivity : ComponentActivity() {
@@ -89,8 +86,7 @@ class MainActivity : ComponentActivity() {
                                     isOverlayPermissionGranted = hasOverlayPermission,
                                     isAccessibilityPermissionGranted = hasAccessibilityPermission,
                                     isMicPermissionGranted = hasMicPermission,
-                                    onOpenSetupWizard = { currentScreen = Screen.SETUP_WIZARD },
-                                    onOpenPlayground = { currentScreen = Screen.PLAYGROUND }
+                                    onOpenSetupWizard = { currentScreen = Screen.SETUP_WIZARD }
                                 )
                             }
                             Screen.SETUP_WIZARD -> {
@@ -106,14 +102,6 @@ class MainActivity : ComponentActivity() {
                                         startOverlayService()
                                         currentScreen = Screen.DASHBOARD
                                     }
-                                )
-                            }
-                            Screen.PLAYGROUND -> {
-                                PlaygroundScreen(
-                                    preferencesManager = preferencesManager,
-                                    isMicPermissionGranted = hasMicPermission,
-                                    onRequestMicPermission = { requestMicPermission() },
-                                    onBack = { currentScreen = Screen.DASHBOARD }
                                 )
                             }
                         }
