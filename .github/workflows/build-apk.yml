@@ -31,26 +31,25 @@ jobs:
           gradle-version: '8.6'
 
       - name: Grant execute permission for gradlew
-        run: chmod +x whisper-flow-android/gradlew
+        run: chmod +x bolnaa-android/gradlew
 
       - name: Generate Release Keystore
         run: |
-          keytool -genkey -v -keystore whisper-flow-android/app/release.keystore \
+          keytool -genkey -v -keystore bolnaa-android/app/release.keystore \
             -alias bolnaa -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass bolnaapassword -keypass bolnaapassword \
             -dname "CN=Bolnaa, OU=Voice, O=BolnaaApp, L=Bangalore, S=KA, C=IN"
 
       - name: Build Signed Release APK
-        working-directory: whisper-flow-android
+        working-directory: bolnaa-android
         run: ./gradlew assembleRelease --stacktrace --no-daemon
 
       - name: Prepare APK Outputs
         run: |
           mkdir -p build-output
-          APK_PATH=$(find whisper-flow-android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          APK_PATH=$(find bolnaa-android/app/build/outputs/apk -name "*.apk" | head -n 1)
           echo "Found generated APK at: $APK_PATH"
           cp "$APK_PATH" build-output/bolnaa.apk
-          cp "$APK_PATH" build-output/whisper-flow.apk
           ls -lh build-output/
 
       - name: Upload APK Artifact
@@ -89,6 +88,5 @@ jobs:
           make_latest: true
           files: |
             build-output/bolnaa.apk
-            build-output/whisper-flow.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
