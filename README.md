@@ -1,4 +1,4 @@
-# 🎙️ Bolnaa - AI Voice Dictation & Auto-Paste for Android
+# 🎙️ Bolnaa - AI Voice Dictation for Android
 
 A native, high-performance voice dictation assistant for Android.
 
@@ -9,9 +9,9 @@ Bolnaa hovers as a sleek floating bubble above your keyboard. Tap the bubble to 
 ## ⚡ Key Highlights
 - **🫧 Floating Bolnaa Bubble**: Smart auto-popup right above your keyboard when typing, draggable anywhere, with live audio waveform animation.
 - **🎯 Direct Text Auto-Paste**: Injects text directly into the focused input field via Accessibility Service.
-- **🚀 Ultra-Fast STT Engine**: Groq Speech (~300ms), OpenAI STT, or Google On-Device Speech.
+- **🚀 Ultra-Fast STT Engine**: Groq Speech (~300ms)
 - **🧠 Bolnaa Smart AI Clean-up**: Strips filler words ("um/uh", false starts) and formats into natural/professional tones.
-- **🔄 Zero-Install Live Updates (OTA)**: Built-in Over-The-Air auto-updater pulls cloud builds automatically without manual reinstall.
+
 
 ---
 
