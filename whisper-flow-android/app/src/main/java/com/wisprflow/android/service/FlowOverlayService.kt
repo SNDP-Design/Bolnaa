@@ -202,6 +202,11 @@ class FlowOverlayService : Service() {
                 }
             }
         }
+        serviceScope.launch {
+            preferencesManager.bubbleSizeDp.collect { sizeDp ->
+                bubbleView?.updateBubbleSize(sizeDp)
+            }
+        }
         audioRecorder.onSilenceDetected = {
             if (bubbleView?.state == DictationState.LISTENING) {
                 stopListeningAndProcess()

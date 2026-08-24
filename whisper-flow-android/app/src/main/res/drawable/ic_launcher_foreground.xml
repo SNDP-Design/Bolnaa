@@ -1,15 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Glowing squircle base with rounded corners -->
     <path
-        android:fillColor="#6366F1"
-        android:pathData="M54,18 C34.1,18 18,34.1 18,54 C18,73.9 34.1,90 54,90 C73.9,90 90,73.9 90,54 C90,34.1 73.9,18 54,18 Z" />
+        android:pathData="M34,22 L74,22 C80.6,22 86,27.4 86,34 L86,74 C86,80.6 80.6,86 74,86 L34,86 C27.4,86 22,80.6 22,74 L22,34 C22,27.4 27.4,22 34,22 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="22"
+                android:startY="22"
+                android:endX="86"
+                android:endY="86"
+                android:type="linear">
+                <item android:color="#7C3AED" android:offset="0.0"/>
+                <item android:color="#6366F1" android:offset="0.5"/>
+                <item android:color="#4F46E5" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner squircle border highlight -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,34 C49.6,34 46,37.6 46,42 L46,54 C46,58.4 49.6,62 54,62 C58.4,62 62,58.4 62,54 L62,42 C62,37.6 58.4,34 54,34 Z" />
+        android:pathData="M35,24 L73,24 C79,24 84,29 84,35 L84,73 C84,79 79,84 73,84 L35,84 C29,84 24,79 24,73 L24,35 C24,29 29,24 35,24 Z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#80FFFFFF" />
+
+    <!-- Sleek Microphone Capsule -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M67,52 L67,54 C67,61.2 61.2,67 54,67 C46.8,67 41,61.2 41,54 L41,52 L37,52 L37,54 C37,62.8 43.7,70 52,70.9 L52,76 L48,76 L48,80 L60,80 L60,76 L56,76 L56,70.9 C64.3,70 71,62.8 71,54 L71,52 L67,52 Z" />
+        android:pathData="M54,34 C49.6,34 46,37.6 46,42 L46,53 C46,57.4 49.6,61 54,61 C58.4,61 62,57.4 62,53 L62,42 C62,37.6 58.4,34 54,34 Z"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Mic audio receptor arc -->
+    <path
+        android:pathData="M67,49 C67,56.2 61.2,62 54,62 C46.8,62 41,56.2 41,49"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeCap="round" />
+
+    <!-- Mic stand & base -->
+    <path
+        android:pathData="M54,62 L54,71 M47,71 L61,71"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeCap="round" />
+
+    <!-- Left Sound Wave Accent -->
+    <path
+        android:pathData="M34,44 C31,48 31,54 34,58"
+        android:strokeWidth="2.2"
+        android:strokeColor="#C4B5FD"
+        android:strokeCap="round" />
+
+    <!-- Right Sound Wave Accent -->
+    <path
+        android:pathData="M74,44 C77,48 77,54 74,58"
+        android:strokeWidth="2.2"
+        android:strokeColor="#C4B5FD"
+        android:strokeCap="round" />
+
 </vector>

@@ -328,6 +328,92 @@ fun SettingsScreen(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
 
+                    // Bubble Size Slider & Presets
+                    val bubbleSizeDp by preferencesManager.bubbleSizeDp.collectAsState(initial = 58)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Bubble Size", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
+                                Text("Resize the floating Bolnaa bubble: ${bubbleSizeDp}dp", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                            }
+                            // Visual circular preview badge
+                            Box(
+                                modifier = Modifier
+                                    .size((bubbleSizeDp * 0.6f).dp.coerceIn(24.dp, 48.dp))
+                                    .clip(CircleShape)
+                                    .background(FlowPrimary.copy(alpha = 0.25f))
+                                    .border(1.5.dp, FlowPrimary, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Mic,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Preset chips: Small, Medium, Large, Extra Large
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(
+                                "Small" to 46,
+                                "Medium" to 56,
+                                "Large" to 66,
+                                "X-Large" to 76
+                            ).forEach { (label, size) ->
+                                val isSelected = bubbleSizeDp == size
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable {
+                                            coroutineScope.launch { preferencesManager.setBubbleSizeDp(size) }
+                                        }
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) FlowPrimary else FlowBorder,
+                                            RoundedCornerShape(10.dp)
+                                        ),
+                                    color = if (isSelected) FlowPrimary.copy(alpha = 0.2f) else FlowSurfaceVariant
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isSelected) FlowPrimary else FlowTextSecondary,
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Slider(
+                            value = bubbleSizeDp.toFloat(),
+                            onValueChange = {
+                                coroutineScope.launch { preferencesManager.setBubbleSizeDp(it.toInt()) }
+                            },
+                            valueRange = 42f..80f,
+                            steps = 18,
+                            colors = SliderDefaults.colors(
+                                thumbColor = FlowPrimary,
+                                activeTrackColor = FlowPrimary,
+                                inactiveTrackColor = FlowSurfaceVariant
+                            )
+                        )
+                    }
+
                     // Haptics toggle
                     Row(
                         modifier = Modifier.fillMaxWidth(),

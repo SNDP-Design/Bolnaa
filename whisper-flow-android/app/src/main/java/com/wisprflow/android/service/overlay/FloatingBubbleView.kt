@@ -112,6 +112,24 @@ class FloatingBubbleView @JvmOverloads constructor(
         targetAmplitude = amplitude.coerceIn(0.05f, 1.0f)
     }
 
+    fun updateBubbleSize(newSizeDp: Int) {
+        val safeSize = newSizeDp.coerceIn(40, 90)
+        baseSize = (safeSize * density).toInt()
+        expandedWidth = (safeSize * 2.5f * density).toInt()
+        layoutParamsWindowManager?.let { params ->
+            val currentProgress = expansionProgress
+            params.width = (baseSize + (expandedWidth - baseSize) * currentProgress).toInt()
+            params.height = baseSize
+            try {
+                windowManager.updateViewLayout(this, params)
+            } catch (e: Exception) {
+                // Ignore layout race
+            }
+        }
+        requestLayout()
+        invalidate()
+    }
+
     fun showAnimated() {
         if (visibility == View.VISIBLE && alpha == 1f) return
         visibility = View.VISIBLE
