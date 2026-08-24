@@ -35,7 +35,20 @@ jobs:
 
       - name: Build Debug APK
         working-directory: whisper-flow-android
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: |
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee ../gradle_output.txt
+
+      - name: Publish Error Log if Build Fails
+        if: failure()
+        run: |
+          tail -n 250 gradle_output.txt > failure_summary.txt
+          echo "==================== BUILD ERROR OUTPUT ===================="
+          cat failure_summary.txt
+          echo "==========================================================="
+          gh release delete error-log --yes || true
+          gh release create error-log --title "Build Error Log" --notes-file failure_summary.txt || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare APK Outputs
         run: |

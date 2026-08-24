@@ -59,11 +59,7 @@
             android:name=".service.FlowOverlayService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="microphone|specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Floating dictation assistant overlay" />
-        </service>
+            android:foregroundServiceType="microphone" />
 
         <!-- Accessibility Service to detect focused input fields and inject text -->
         <service
