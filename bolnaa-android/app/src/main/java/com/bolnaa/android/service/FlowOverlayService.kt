@@ -228,6 +228,24 @@ class FlowOverlayService : Service() {
             }
         }
         serviceScope.launch {
+            val savedX = preferencesManager.bubblePosX.first()
+            val savedY = preferencesManager.bubblePosY.first()
+            if (savedX >= 0 && savedY >= 0) {
+                bubbleView?.let { bubble ->
+                    val params = bubble.layoutParamsWindowManager
+                    if (params != null) {
+                        params.x = savedX
+                        params.y = savedY
+                        try {
+                            windowManager.updateViewLayout(bubble, params)
+                        } catch (e: Exception) {
+                            // Ignore layout race
+                        }
+                    }
+                }
+            }
+        }
+        serviceScope.launch {
             preferencesManager.isAttachToKeyboardEnabled.collect { enabled ->
                 isKeyboardOnlyMode = enabled
                 updateBubbleVisibility(FlowAccessibilityService.isKeyboardVisibleFlow.value)
@@ -241,13 +259,6 @@ class FlowOverlayService : Service() {
         serviceScope.launch {
             FlowAccessibilityService.isKeyboardVisibleFlow.collect { isKeyboardOpen ->
                 updateBubbleVisibility(isKeyboardOpen)
-            }
-        }
-        serviceScope.launch {
-            FlowAccessibilityService.keyboardTopYFlow.collect { keyboardTopY ->
-                if (keyboardTopY != null && isKeyboardOnlyMode) {
-                    adjustBubblePositionAboveKeyboard(keyboardTopY)
-                }
             }
         }
         serviceScope.launch {
@@ -274,23 +285,6 @@ class FlowOverlayService : Service() {
         } else {
             if (bubble.state == DictationState.IDLE || bubble.state == DictationState.SUCCESS) {
                 bubble.hideAnimated()
-            }
-        }
-    }
-
-    private fun adjustBubblePositionAboveKeyboard(keyboardTopY: Int) {
-        val bubble = bubbleView ?: return
-        val params = bubble.layoutParamsWindowManager ?: return
-        val density = resources.displayMetrics.density
-        val bubbleHeight = bubble.height.takeIf { it > 0 } ?: (72 * density).toInt()
-        val targetY = (keyboardTopY - bubbleHeight - (12 * density).toInt()).coerceAtLeast(60)
-
-        if (kotlin.math.abs(params.y - targetY) > 8) {
-            params.y = targetY
-            try {
-                windowManager.updateViewLayout(bubble, params)
-            } catch (e: Exception) {
-                // Ignore layout update race
             }
         }
     }
