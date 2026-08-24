@@ -43,9 +43,7 @@ fun DashboardScreen(
     val scrollState = rememberScrollState()
 
     // Preferences state
-    val selectedEngine by preferencesManager.sttEngine.collectAsState(initial = SttEngine.GROQ)
     val groqKey by preferencesManager.groqApiKey.collectAsState(initial = "")
-    val openAiKey by preferencesManager.openAiApiKey.collectAsState(initial = "")
     val isAiCleanupEnabled by preferencesManager.isAiCleanupEnabled.collectAsState(initial = true)
     val isAutoStopSilence by preferencesManager.isAutoStopSilence.collectAsState(initial = true)
     val silenceTimeoutMs by preferencesManager.silenceTimeoutMs.collectAsState(initial = 1600)
@@ -54,8 +52,9 @@ fun DashboardScreen(
     val isHapticsEnabled by preferencesManager.isHapticFeedbackEnabled.collectAsState(initial = true)
     val customVocab by preferencesManager.customVocabulary.collectAsState(initial = "")
 
-    // Ensure Natural tone is always active
+    // Ensure Groq Whisper and Natural Tone are always enforced as defaults
     LaunchedEffect(Unit) {
+        preferencesManager.setSttEngine(SttEngine.GROQ)
         preferencesManager.setFlowTone(FlowTone.NATURAL)
         preferencesManager.setAttachToKeyboardEnabled(true)
     }
@@ -63,8 +62,6 @@ fun DashboardScreen(
     // Local UI state for text fields
     var groqInput by remember(groqKey) { mutableStateOf(groqKey) }
     var isGroqKeyVisible by remember { mutableStateOf(false) }
-    var openAiInput by remember(openAiKey) { mutableStateOf(openAiKey) }
-    var isOpenAiKeyVisible by remember { mutableStateOf(false) }
     var customVocabInput by remember(customVocab) { mutableStateOf(customVocab) }
 
     val allPermissionsGranted = isOverlayPermissionGranted && isAccessibilityPermissionGranted && isMicPermissionGranted
@@ -323,10 +320,10 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // ==========================================
-        // 2. SPEECH RECOGNITION (STT) & API KEYS
+        // 2. GROQ WHISPER API KEY
         // ==========================================
         Text(
-            text = "Speech Recognition (STT)",
+            text = "Groq Whisper API Key",
             style = MaterialTheme.typography.titleMedium,
             color = FlowTextPrimary
         )
@@ -339,68 +336,22 @@ fun DashboardScreen(
             border = androidx.compose.foundation.BorderStroke(1.dp, FlowBorder)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "⚡ Groq Whisper Large v3 (Ultra-Fast ~300ms)",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = FlowSuccess,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Select Recognition Engine:",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = "High-accuracy, sub-second voice transcription powered by Groq LPU.",
+                    style = MaterialTheme.typography.bodySmall,
                     color = FlowTextSecondary
                 )
-                Spacer(modifier = Modifier.height(10.dp))
 
-                SttEngine.values().forEach { engine ->
-                    val isSelected = selectedEngine == engine
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
-                                coroutineScope.launch { preferencesManager.setSttEngine(engine) }
-                            }
-                            .border(
-                                1.dp,
-                                if (isSelected) FlowPrimary else FlowBorder,
-                                RoundedCornerShape(12.dp)
-                            ),
-                        color = if (isSelected) FlowPrimary.copy(alpha = 0.12f) else FlowSurfaceVariant
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = { coroutineScope.launch { preferencesManager.setSttEngine(engine) } },
-                                colors = RadioButtonDefaults.colors(selectedColor = FlowPrimary)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = engine.title,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = FlowTextPrimary
-                                    )
-                                    if (engine == SttEngine.GROQ) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "⚡ ~300ms",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = FlowSuccess,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = engine.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = FlowTextSecondary
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Groq API Key Input
                 OutlinedTextField(
@@ -409,7 +360,7 @@ fun DashboardScreen(
                         groqInput = it
                         coroutineScope.launch { preferencesManager.setGroqApiKey(it) }
                     },
-                    label = { Text("Groq API Key (Free @ console.groq.com)") },
+                    label = { Text("Groq API Key") },
                     placeholder = { Text("gsk_...") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -434,38 +385,11 @@ fun DashboardScreen(
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // OpenAI API Key Input
-                OutlinedTextField(
-                    value = openAiInput,
-                    onValueChange = {
-                        openAiInput = it
-                        coroutineScope.launch { preferencesManager.setOpenAiApiKey(it) }
-                    },
-                    label = { Text("OpenAI API Key (Optional)") },
-                    placeholder = { Text("sk-...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    visualTransformation = if (isOpenAiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { isOpenAiKeyVisible = !isOpenAiKeyVisible }) {
-                            Icon(
-                                imageVector = if (isOpenAiKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = null,
-                                tint = FlowTextMuted
-                            )
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = FlowPrimary,
-                        unfocusedBorderColor = FlowBorder,
-                        focusedTextColor = FlowTextPrimary,
-                        unfocusedTextColor = FlowTextPrimary,
-                        focusedContainerColor = FlowSurfaceVariant,
-                        unfocusedContainerColor = FlowSurfaceVariant
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Get your free API key at console.groq.com",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = FlowTextMuted
                 )
             }
         }
