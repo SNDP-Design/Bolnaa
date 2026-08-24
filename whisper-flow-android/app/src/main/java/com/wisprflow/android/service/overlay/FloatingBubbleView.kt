@@ -112,6 +112,33 @@ class FloatingBubbleView @JvmOverloads constructor(
         targetAmplitude = amplitude.coerceIn(0.05f, 1.0f)
     }
 
+    fun showAnimated() {
+        if (visibility == View.VISIBLE && alpha == 1f) return
+        visibility = View.VISIBLE
+        animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(220)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+    }
+
+    fun hideAnimated(onComplete: (() -> Unit)? = null) {
+        if (visibility == View.GONE) return
+        animate()
+            .alpha(0f)
+            .scaleX(0.6f)
+            .scaleY(0.6f)
+            .setDuration(180)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                visibility = View.GONE
+                onComplete?.invoke()
+            }
+            .start()
+    }
+
     private fun updateWaveBars() {
         for (i in waveBars.indices) {
             val offset = i * 0.8f

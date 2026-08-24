@@ -159,6 +159,9 @@ class FlowOverlayService : Service() {
         bubbleView = FloatingBubbleView(this).apply {
             layoutParamsWindowManager = params
             onBubbleClick = { handleBubbleClick() }
+            // Start hidden if attach to keyboard is enabled
+            visibility = android.view.View.GONE
+            alpha = 0f
         }
 
         try {
@@ -167,6 +170,8 @@ class FlowOverlayService : Service() {
             Log.e(TAG, "Failed to add floating bubble view", e)
         }
     }
+
+    private var isKeyboardOnlyMode = true
 
     private fun observePreferences() {
         serviceScope.launch {
@@ -179,9 +184,60 @@ class FlowOverlayService : Service() {
                 audioRecorder.autoSilenceDetectionEnabled = enabled
             }
         }
+        serviceScope.launch {
+            preferencesManager.isAttachToKeyboardEnabled.collect { enabled ->
+                isKeyboardOnlyMode = enabled
+                updateBubbleVisibility(FlowAccessibilityService.isKeyboardVisibleFlow.value)
+            }
+        }
+        serviceScope.launch {
+            FlowAccessibilityService.isKeyboardVisibleFlow.collect { isKeyboardOpen ->
+                updateBubbleVisibility(isKeyboardOpen)
+            }
+        }
+        serviceScope.launch {
+            FlowAccessibilityService.keyboardTopYFlow.collect { keyboardTopY ->
+                if (keyboardTopY != null && isKeyboardOnlyMode) {
+                    adjustBubblePositionAboveKeyboard(keyboardTopY)
+                }
+            }
+        }
         audioRecorder.onSilenceDetected = {
             if (bubbleView?.state == DictationState.LISTENING) {
                 stopListeningAndProcess()
+            }
+        }
+    }
+
+    private fun updateBubbleVisibility(isKeyboardOpen: Boolean) {
+        val bubble = bubbleView ?: return
+        if (!isKeyboardOnlyMode) {
+            bubble.showAnimated()
+            return
+        }
+
+        if (isKeyboardOpen) {
+            bubble.showAnimated()
+        } else {
+            if (bubble.state == DictationState.IDLE || bubble.state == DictationState.SUCCESS) {
+                bubble.hideAnimated()
+            }
+        }
+    }
+
+    private fun adjustBubblePositionAboveKeyboard(keyboardTopY: Int) {
+        val bubble = bubbleView ?: return
+        val params = bubble.layoutParamsWindowManager ?: return
+        val density = resources.displayMetrics.density
+        val bubbleHeight = (58 * density).toInt()
+        val targetY = (keyboardTopY - bubbleHeight - (12 * density).toInt()).coerceAtLeast(60)
+
+        if (kotlin.math.abs(params.y - targetY) > 8) {
+            params.y = targetY
+            try {
+                windowManager.updateViewLayout(bubble, params)
+            } catch (e: Exception) {
+                // Ignore layout update race
             }
         }
     }
@@ -200,6 +256,9 @@ class FlowOverlayService : Service() {
             }
             DictationState.SUCCESS -> {
                 bubbleView?.state = DictationState.IDLE
+                if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
+                    bubbleView?.hideAnimated()
+                }
             }
         }
     }
@@ -211,6 +270,9 @@ class FlowOverlayService : Service() {
             serviceScope.launch {
                 delay(1500)
                 bubbleView?.state = DictationState.IDLE
+                if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
+                    bubbleView?.hideAnimated()
+                }
             }
             return
         }
@@ -239,6 +301,9 @@ class FlowOverlayService : Service() {
                 bubbleView?.state = DictationState.ERROR
                 delay(1200)
                 bubbleView?.state = DictationState.IDLE
+                if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
+                    bubbleView?.hideAnimated()
+                }
                 return@launch
             }
 
@@ -256,14 +321,23 @@ class FlowOverlayService : Service() {
                     bubbleView?.state = DictationState.SUCCESS
                     delay(1200)
                     bubbleView?.state = DictationState.IDLE
+                    if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
+                        bubbleView?.hideAnimated()
+                    }
                 } else {
                     bubbleView?.state = DictationState.IDLE
+                    if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
+                        bubbleView?.hideAnimated()
+                    }
                 }
             } else {
                 Log.e(TAG, "Transcription failed", result.exceptionOrNull())
                 bubbleView?.state = DictationState.ERROR
                 delay(1500)
                 bubbleView?.state = DictationState.IDLE
+                if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
+                    bubbleView?.hideAnimated()
+                }
             }
         }
     }

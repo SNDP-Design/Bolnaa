@@ -291,6 +291,64 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // Floating Bubble Appearance & Trigger
+            Text(
+                text = "Floating Bubble Behavior",
+                style = MaterialTheme.typography.titleMedium,
+                color = FlowTextPrimary
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = FlowSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, FlowBorder)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    val isAttachToKeyboard by preferencesManager.isAttachToKeyboardEnabled.collectAsState(initial = true)
+                    val isHapticsEnabled by preferencesManager.isHapticFeedbackEnabled.collectAsState(initial = true)
+
+                    // Show only with keyboard toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Show Only When Keyboard Opens", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
+                            Text("Automatically pops up right above your keypad when typing in any app and hides when closed", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                        }
+                        Switch(
+                            checked = isAttachToKeyboard,
+                            onCheckedChange = { coroutineScope.launch { preferencesManager.setAttachToKeyboardEnabled(it) } },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
+                        )
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
+
+                    // Haptics toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Haptic Feedback", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
+                            Text("Vibrate gently when starting, stopping, or pasting text", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                        }
+                        Switch(
+                            checked = isHapticsEnabled,
+                            onCheckedChange = { coroutineScope.launch { preferencesManager.setHapticFeedbackEnabled(it) } },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
             // Live Updates (OTA) Configuration
             Text(
                 text = "Live Over-The-Air (OTA) Updates",
