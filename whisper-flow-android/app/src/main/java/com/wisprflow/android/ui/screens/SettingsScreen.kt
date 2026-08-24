@@ -244,7 +244,7 @@ fun SettingsScreen(
                         )
                     }
 
-                    Divider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
 
                     // Auto Stop Silence Toggle
                     Row(
