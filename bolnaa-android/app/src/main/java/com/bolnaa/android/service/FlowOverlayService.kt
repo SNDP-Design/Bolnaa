@@ -8,6 +8,7 @@ import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
@@ -33,17 +34,25 @@ class FlowOverlayService : Service() {
             private set
 
         fun start(context: Context) {
-            val intent = Intent(context, FlowOverlayService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                val intent = Intent(context, FlowOverlayService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start FlowOverlayService", e)
             }
         }
 
         fun stop(context: Context) {
-            val intent = Intent(context, FlowOverlayService::class.java)
-            context.stopService(intent)
+            try {
+                val intent = Intent(context, FlowOverlayService::class.java)
+                context.stopService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to stop FlowOverlayService", e)
+            }
         }
     }
 
@@ -71,6 +80,35 @@ class FlowOverlayService : Service() {
         startForegroundNotification()
         createFloatingBubble()
         observePreferences()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "FlowOverlayService onStartCommand (START_STICKY)")
+        isRunning = true
+        return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d(TAG, "FlowOverlayService onTaskRemoved, maintaining foreground execution")
+        // Schedule auto-respawn if killed by aggressive OS task killers
+        try {
+            val restartIntent = Intent(applicationContext, FlowOverlayService::class.java).also {
+                it.setPackage(packageName)
+            }
+            val restartPendingIntent = PendingIntent.getService(
+                applicationContext, 1, restartIntent,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+            alarmManager?.set(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 800,
+                restartPendingIntent
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to schedule alarm respawn", e)
+        }
     }
 
     private fun startForegroundNotification() {
@@ -243,8 +281,7 @@ class FlowOverlayService : Service() {
     private fun adjustBubblePositionAboveKeyboard(keyboardTopY: Int) {
         val bubble = bubbleView ?: return
         val params = bubble.layoutParamsWindowManager ?: return
-        val density = resources.displayMetrics.density
-        val bubbleHeight = (58 * density).toInt()
+        val bubbleHeight = bubble.height.takeIf { it > 0 } ?: (72 * density).toInt()
         val targetY = (keyboardTopY - bubbleHeight - (12 * density).toInt()).coerceAtLeast(60)
 
         if (kotlin.math.abs(params.y - targetY) > 8) {

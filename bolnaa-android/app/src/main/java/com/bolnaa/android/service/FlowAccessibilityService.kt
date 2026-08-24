@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -56,6 +57,7 @@ class FlowAccessibilityService : AccessibilityService() {
             notificationTimeout = 50
         }
         serviceInfo = info
+        ensureOverlayServiceRunning()
         checkKeyboardAndFocusState()
     }
 
@@ -71,6 +73,7 @@ class FlowAccessibilityService : AccessibilityService() {
                     lastFocusedPackage = event.packageName
                     Log.d(TAG, "Focused editable field in package: $lastFocusedPackage")
                 }
+                ensureOverlayServiceRunning()
                 checkKeyboardAndFocusState()
             }
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
@@ -78,6 +81,17 @@ class FlowAccessibilityService : AccessibilityService() {
                 findAndCacheFocusedNode()
                 checkKeyboardAndFocusState()
             }
+        }
+    }
+
+    private fun ensureOverlayServiceRunning() {
+        try {
+            if (!FlowOverlayService.isRunning && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this))) {
+                Log.d(TAG, "Ensuring FlowOverlayService is running from AccessibilityService")
+                FlowOverlayService.start(this)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to ensure FlowOverlayService running", e)
         }
     }
 
@@ -102,6 +116,10 @@ class FlowAccessibilityService : AccessibilityService() {
                         }
                     }
                 }
+            }
+
+            if (keyboardVisible) {
+                ensureOverlayServiceRunning()
             }
 
             if (_isKeyboardVisibleFlow.value != keyboardVisible) {
