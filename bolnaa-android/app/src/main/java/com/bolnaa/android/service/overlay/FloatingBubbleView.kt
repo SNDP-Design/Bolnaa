@@ -227,35 +227,56 @@ class FloatingBubbleView @JvmOverloads constructor(
 
         val w = width.toFloat()
         val h = height.toFloat()
-        val radius = h / 2f
-
-        // 1. Draw Glassmorphic Background Pill
-        when (state) {
-            DictationState.LISTENING -> {
-                backgroundPaint.color = Color.parseColor("#1F132B")
-                borderPaint.color = Color.parseColor("#EF4444")
-            }
-            DictationState.PROCESSING -> {
-                backgroundPaint.color = Color.parseColor("#18182E")
-                borderPaint.color = Color.parseColor("#8B5CF6")
-            }
-            DictationState.SUCCESS -> {
-                backgroundPaint.color = Color.parseColor("#0F291E")
-                borderPaint.color = Color.parseColor("#10B981")
-            }
-            DictationState.ERROR -> {
-                backgroundPaint.color = Color.parseColor("#2E1414")
-                borderPaint.color = Color.parseColor("#EF4444")
-            }
-            else -> {
-                backgroundPaint.color = Color.parseColor("#181824")
-                borderPaint.color = Color.parseColor("#6366F1")
-            }
+        // Squircle corner radius matching Bolnaa app logo (rounded square)
+        val cornerRadius = if (expansionProgress > 0f) {
+            (h * 0.28f) + ((h / 2f) - (h * 0.28f)) * expansionProgress
+        } else {
+            h * 0.28f
         }
 
-        val rectF = RectF(borderPaint.strokeWidth / 2, borderPaint.strokeWidth / 2, w - borderPaint.strokeWidth / 2, h - borderPaint.strokeWidth / 2)
-        canvas.drawRoundRect(rectF, radius, radius, backgroundPaint)
-        canvas.drawRoundRect(rectF, radius, radius, borderPaint)
+        // 1. Draw Glassmorphic Squircle Background with Gradient
+        val bgGradient = when (state) {
+            DictationState.LISTENING -> LinearGradient(
+                0f, 0f, w, h,
+                intArrayOf(Color.parseColor("#881337"), Color.parseColor("#E11D48")),
+                null, Shader.TileMode.CLAMP
+            )
+            DictationState.PROCESSING -> LinearGradient(
+                0f, 0f, w, h,
+                intArrayOf(Color.parseColor("#312E81"), Color.parseColor("#6366F1")),
+                null, Shader.TileMode.CLAMP
+            )
+            DictationState.SUCCESS -> LinearGradient(
+                0f, 0f, w, h,
+                intArrayOf(Color.parseColor("#064E3B"), Color.parseColor("#10B981")),
+                null, Shader.TileMode.CLAMP
+            )
+            DictationState.ERROR -> LinearGradient(
+                0f, 0f, w, h,
+                intArrayOf(Color.parseColor("#450A0A"), Color.parseColor("#EF4444")),
+                null, Shader.TileMode.CLAMP
+            )
+            else -> LinearGradient(
+                0f, 0f, w, h,
+                intArrayOf(Color.parseColor("#4338CA"), Color.parseColor("#7C3AED")),
+                null, Shader.TileMode.CLAMP
+            )
+        }
+
+        backgroundPaint.shader = bgGradient
+
+        when (state) {
+            DictationState.LISTENING -> borderPaint.color = Color.parseColor("#FDA4AF")
+            DictationState.PROCESSING -> borderPaint.color = Color.parseColor("#C7D2FE")
+            DictationState.SUCCESS -> borderPaint.color = Color.parseColor("#6EE7B7")
+            DictationState.ERROR -> borderPaint.color = Color.parseColor("#FCA5A5")
+            else -> borderPaint.color = Color.parseColor("#A5B4FC")
+        }
+
+        val strokeOffset = borderPaint.strokeWidth / 2f
+        val rectF = RectF(strokeOffset, strokeOffset, w - strokeOffset, h - strokeOffset)
+        canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, backgroundPaint)
+        canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, borderPaint)
 
         // 2. Draw Content based on state
         when (state) {
@@ -271,30 +292,37 @@ class FloatingBubbleView @JvmOverloads constructor(
         val cx = w / 2f
         val cy = h / 2f
 
-        // Draw Bolnaa Sparkle / Mic Icon in center
-        val micPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        // Draw Bolnaa Mic + Waveform silhouette matching app icon
+        val whiteFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.FILL
         }
 
-        // Draw sleek mic silhouette
-        val micWidth = 7f * density
-        val micHeight = 14f * density
-        val micRect = RectF(cx - micWidth / 2, cy - micHeight / 2 - 2 * density, cx + micWidth / 2, cy + micHeight / 2 - 2 * density)
-        canvas.drawRoundRect(micRect, micWidth / 2, micWidth / 2, micPaint)
-
-        // Mic base arc
-        val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val whiteStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.STROKE
-            strokeWidth = 2f * density
+            strokeWidth = 2.2f * density
             strokeCap = Paint.Cap.ROUND
         }
-        val arcRect = RectF(cx - 8f * density, cy - 8f * density, cx + 8f * density, cy + 8f * density)
-        canvas.drawArc(arcRect, 0f, 180f, false, arcPaint)
 
-        // Stand line
-        canvas.drawLine(cx, cy + 8f * density, cx, cy + 12f * density, arcPaint)
+        // Center mic capsule
+        val micWidth = 6.5f * density
+        val micHeight = 13f * density
+        val micRect = RectF(cx - micWidth / 2, cy - micHeight / 2 - 2 * density, cx + micWidth / 2, cy + micHeight / 2 - 2 * density)
+        canvas.drawRoundRect(micRect, micWidth / 2, micWidth / 2, whiteFill)
+
+        // Mic U-cradle
+        val cradleRect = RectF(cx - 7.5f * density, cy - 7.5f * density, cx + 7.5f * density, cy + 7.5f * density)
+        canvas.drawArc(cradleRect, 0f, 180f, false, whiteStroke)
+
+        // Mic stand
+        canvas.drawLine(cx, cy + 7.5f * density, cx, cy + 11.5f * density, whiteStroke)
+
+        // Left audio sound wave bar
+        canvas.drawLine(cx - 12f * density, cy - 4f * density, cx - 12f * density, cy + 4f * density, whiteStroke)
+
+        // Right audio sound wave bar
+        canvas.drawLine(cx + 12f * density, cy - 4f * density, cx + 12f * density, cy + 4f * density, whiteStroke)
     }
 
     private fun drawListeningState(canvas: Canvas, w: Float, h: Float) {

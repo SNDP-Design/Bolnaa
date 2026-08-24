@@ -86,25 +86,21 @@ class FlowAccessibilityService : AccessibilityService() {
             var keyboardVisible = false
             var keyboardTopY: Int? = null
 
-            // 1. Inspect active system windows for InputMethod / Soft Keyboard
+            // Inspect active system windows for InputMethod / Soft Keyboard
             val currentWindows = try { windows } catch (e: Exception) { null }
             if (!currentWindows.isNullOrEmpty()) {
-                val imeWindow = currentWindows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
-                if (imeWindow != null) {
-                    val bounds = Rect()
-                    imeWindow.getBoundsInScreen(bounds)
-                    if (bounds.height() > 80 && bounds.top > 0) {
-                        keyboardVisible = true
-                        keyboardTopY = bounds.top
+                val screenHeight = resources.displayMetrics.heightPixels
+                for (window in currentWindows) {
+                    if (window.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD) {
+                        val bounds = Rect()
+                        window.getBoundsInScreen(bounds)
+                        // A visible soft keyboard occupies substantial height at the bottom of the screen (typically > 120px)
+                        if (bounds.height() > 120 && bounds.top < screenHeight && bounds.bottom >= screenHeight - 150) {
+                            keyboardVisible = true
+                            keyboardTopY = bounds.top
+                            break
+                        }
                     }
-                }
-            }
-
-            // 2. Fallback: If focused node is editable, assume keyboard is active
-            if (!keyboardVisible) {
-                val focused = currentFocusedNode ?: rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-                if (focused != null && focused.isEditable) {
-                    keyboardVisible = true
                 }
             }
 
