@@ -461,7 +461,7 @@ fun DashboardScreen(
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = engine.displayName,
+                                        text = engine.title,
                                         style = MaterialTheme.typography.titleMedium,
                                         color = FlowTextPrimary
                                     )
@@ -617,7 +617,7 @@ fun DashboardScreen(
                             color = if (isSelected) FlowPrimary.copy(alpha = 0.2f) else FlowSurfaceVariant
                         ) {
                             Text(
-                                text = tone.displayName,
+                                text = tone.title.split(" ").firstOrNull() ?: tone.name,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (isSelected) FlowPrimary else FlowTextSecondary,
                                 modifier = Modifier.padding(vertical = 8.dp),
@@ -722,17 +722,18 @@ fun DashboardScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Linked to SNDP-Design/Bolnaa", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
                         Text(
-                            text = when (updateStatus) {
+                            text = when (val s = updateStatus) {
                                 is UpdateStatus.Checking -> "Checking for new cloud build..."
-                                is UpdateStatus.UpdateAvailable -> "🎉 New update available!"
-                                is UpdateStatus.Downloading -> "Downloading update..."
+                                is UpdateStatus.Available -> "🎉 New update available: ${s.version}"
+                                is UpdateStatus.Downloading -> "Downloading update (${(s.progress * 100).toInt()}%)..."
+                                is UpdateStatus.ReadyToInstall -> "Update downloaded. Ready to install."
                                 is UpdateStatus.UpToDate -> "Your app is running the latest build."
                                 is UpdateStatus.Error -> "Unable to reach GitHub releases."
                                 else -> "Cloud builds update here automatically."
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             color = when (updateStatus) {
-                                is UpdateStatus.UpdateAvailable -> FlowSuccess
+                                is UpdateStatus.Available -> FlowSuccess
                                 is UpdateStatus.Error -> FlowWarning
                                 else -> FlowTextSecondary
                             }
@@ -741,24 +742,27 @@ fun DashboardScreen(
 
                     Button(
                         onClick = {
-                            if (updateStatus is UpdateStatus.UpdateAvailable) {
-                                (updateStatus as? UpdateStatus.UpdateAvailable)?.release?.apkDownloadUrl?.let { url ->
-                                    updateManager.downloadAndInstallUpdate(url)
+                            val currentStatus = updateStatus
+                            if (currentStatus is UpdateStatus.Available) {
+                                coroutineScope.launch {
+                                    updateManager.downloadAndInstall(currentStatus.downloadUrl)
                                 }
                             } else {
-                                updateManager.checkForUpdates()
+                                coroutineScope.launch {
+                                    updateManager.checkForUpdates()
+                                }
                                 Toast.makeText(context, "Checking GitHub for updates...", Toast.LENGTH_SHORT).show()
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (updateStatus is UpdateStatus.UpdateAvailable) FlowSuccess else FlowPrimary
+                            containerColor = if (updateStatus is UpdateStatus.Available) FlowSuccess else FlowPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text = when (updateStatus) {
                                 is UpdateStatus.Checking -> "Checking..."
-                                is UpdateStatus.UpdateAvailable -> "Install Now"
+                                is UpdateStatus.Available -> "Install Now"
                                 is UpdateStatus.Downloading -> "Downloading..."
                                 else -> "Check Updates"
                             },
