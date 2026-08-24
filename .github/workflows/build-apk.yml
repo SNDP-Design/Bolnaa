@@ -33,9 +33,16 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x whisper-flow-android/gradlew
 
-      - name: Build Debug APK
+      - name: Generate Release Keystore
+        run: |
+          keytool -genkey -v -keystore whisper-flow-android/app/release.keystore \
+            -alias bolnaa -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass bolnaapassword -keypass bolnaapassword \
+            -dname "CN=Bolnaa, OU=Voice, O=BolnaaApp, L=Bangalore, S=KA, C=IN"
+
+      - name: Build Signed Release APK
         working-directory: whisper-flow-android
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: ./gradlew assembleRelease --stacktrace --no-daemon
 
       - name: Prepare APK Outputs
         run: |
@@ -71,10 +78,12 @@ jobs:
             - Commit: `${{ github.sha }}`
             - **Download Bolnaa APK**: [bolnaa.apk](https://github.com/${{ github.repository }}/releases/download/latest/bolnaa.apk)
             
-            #### How to Install:
-            1. Download `bolnaa.apk` on your Android phone.
-            2. Tap to install.
-            3. Future updates pushed here will automatically update the app over-the-air!
+            #### How to Install on Xiaomi / Redmi / Android:
+            1. Download `bolnaa.apk` on your phone.
+            2. If Google Play Protect shows a warning:
+               - Open **Play Store** -> Tap Profile Icon -> **Play Protect** -> **⚙️ Settings** -> Turn OFF **"Scan apps with Play Protect"**.
+            3. Tap to install `bolnaa.apk`.
+            4. On Xiaomi/MIUI: Enable **"Allow restricted settings"** under App Info to enable Accessibility service.
           draft: false
           prerelease: false
           make_latest: true
