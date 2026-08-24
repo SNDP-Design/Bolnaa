@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.service.FlowAccessibilityService
+import com.bolnaa.android.service.FlowOverlayService
 import com.bolnaa.android.ui.screens.DashboardScreen
 import com.bolnaa.android.ui.screens.SetupWizardScreen
 import com.bolnaa.android.ui.theme.FlowBg
