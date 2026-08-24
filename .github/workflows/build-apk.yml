@@ -35,21 +35,7 @@ jobs:
 
       - name: Build Debug APK
         working-directory: whisper-flow-android
-        run: |
-          ./gradlew assembleDebug --stacktrace --no-daemon > ../build_log.txt 2>&1 || {
-            echo "========== GRADLE BUILD FAILURE LOG =========="
-            tail -n 150 ../build_log.txt
-            echo "=============================================="
-            exit 1
-          }
-
-      - name: Upload Build Log on Failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-build-log
-          path: build_log.txt
-          retention-days: 7
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Prepare APK Outputs
         run: |
