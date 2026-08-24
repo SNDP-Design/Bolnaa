@@ -1,4 +1,4 @@
-name: Build & Release Whisper Flow APK
+name: Build & Release Bolnaa APK
 
 on:
   push:
@@ -36,16 +36,17 @@ jobs:
         working-directory: whisper-flow-android
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Rename APK
+      - name: Rename & Prepare APKs
         run: |
           mkdir -p build-output
+          cp whisper-flow-android/app/build/outputs/apk/debug/app-debug.apk build-output/bolnaa.apk
           cp whisper-flow-android/app/build/outputs/apk/debug/app-debug.apk build-output/whisper-flow.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: whisper-flow-apk
-          path: build-output/whisper-flow.apk
+          name: bolnaa-apk
+          path: build-output/bolnaa.apk
           retention-days: 30
 
       - name: Create or Update GitHub Release (Live Download Link)
@@ -53,18 +54,20 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
           tag_name: latest
-          name: "Whisper Flow Latest Build"
+          name: "Bolnaa Latest Build"
           body: |
-            ### 🎙️ Whisper Flow Latest Build
+            ### 🎙️ Bolnaa Latest Build
             - Built automatically from commit: `${{ github.sha }}`
-            - **Download APK**: [whisper-flow.apk](https://github.com/${{ github.repository }}/releases/download/latest/whisper-flow.apk)
+            - **Download Bolnaa APK**: [bolnaa.apk](https://github.com/${{ github.repository }}/releases/download/latest/bolnaa.apk)
             
             #### How to Install:
-            1. Download `whisper-flow.apk` on your Android phone.
+            1. Download `bolnaa.apk` on your Android phone.
             2. Tap to install.
             3. Future updates pushed here will automatically update the app over-the-air!
           draft: false
           prerelease: false
-          files: build-output/whisper-flow.apk
+          files: |
+            build-output/bolnaa.apk
+            build-output/whisper-flow.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

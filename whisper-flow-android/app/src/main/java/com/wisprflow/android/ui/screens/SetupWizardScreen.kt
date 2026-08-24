@@ -57,13 +57,13 @@ fun SetupWizardScreen(
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             Text(
-                text = "Enable Wispr Flow Powers",
+                text = "Enable Bolnaa Powers",
                 style = MaterialTheme.typography.headlineMedium,
                 color = FlowTextPrimary
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Wispr Flow requires these permissions to float above your keyboard, capture voice input, and automatically insert formatted text into your apps.",
+                text = "Bolnaa requires these permissions to float above your keyboard, capture voice input, and automatically insert formatted text into your apps.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = FlowTextSecondary
             )
@@ -84,7 +84,7 @@ fun SetupWizardScreen(
             // 2. Display Over Other Apps (Overlay)
             PermissionCard(
                 title = "2. Floating Bubble Overlay",
-                description = "Allows the Wispr bubble to hover above your keyboard and apps.",
+                description = "Allows the Bolnaa bubble to hover above your keyboard and apps.",
                 icon = Icons.Default.Layers,
                 isGranted = isOverlayPermissionGranted,
                 onGrantClick = onRequestOverlayPermission
@@ -95,7 +95,7 @@ fun SetupWizardScreen(
             // 3. Accessibility Service
             PermissionCard(
                 title = "3. Auto Text Insertion (Accessibility)",
-                description = "Enables Whisper Flow to detect active input fields and automatically paste dictated text.",
+                description = "Enables Bolnaa to detect active input fields and automatically paste dictated text.",
                 icon = Icons.Default.AccessibilityNew,
                 isGranted = isAccessibilityPermissionGranted,
                 onGrantClick = onRequestAccessibilityPermission
@@ -118,7 +118,7 @@ fun SetupWizardScreen(
                 )
             ) {
                 Text(
-                    text = if (allGranted) "All Set! Launch Whisper Flow" else "Please Grant Permissions Above",
+                    text = if (allGranted) "All Set! Launch Bolnaa" else "Please Grant Permissions Above",
                     style = MaterialTheme.typography.titleMedium
                 )
             }

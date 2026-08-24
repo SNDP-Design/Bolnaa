@@ -129,7 +129,7 @@ class FlowAccessibilityService : AccessibilityService() {
 
     private fun copyToClipboard(text: String) {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("Whisper Flow Dictation", text)
+        val clip = ClipData.newPlainText("Bolnaa Voice Typing", text)
         clipboard.setPrimaryClip(clip)
     }
 

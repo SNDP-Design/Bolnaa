@@ -27,7 +27,7 @@ import com.wisprflow.android.ui.screens.PlaygroundScreen
 import com.wisprflow.android.ui.screens.SettingsScreen
 import com.wisprflow.android.ui.screens.SetupWizardScreen
 import com.wisprflow.android.ui.theme.FlowBg
-import com.wisprflow.android.ui.theme.WhisperFlowTheme
+import com.wisprflow.android.ui.theme.BolnaaTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
         updatePermissionStates()
 
         setContent {
-            WhisperFlowTheme {
+            BolnaaTheme {
                 val updateManager = remember { com.wisprflow.android.updater.AppUpdateManager(this@MainActivity) }
                 val updateStatus by updateManager.updateStatus.collectAsState()
 
@@ -181,7 +181,7 @@ class MainActivity : ComponentActivity() {
     private fun requestAccessibilityPermission() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
         startActivity(intent)
-        Toast.makeText(this, "Enable 'Whisper Flow' in Downloaded / Installed apps", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Enable 'Bolnaa' in Downloaded / Installed apps", Toast.LENGTH_LONG).show()
     }
 
     private fun startOverlayService() {

@@ -27,7 +27,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
-fun WhisperFlowTheme(
+fun BolnaaTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = DarkColorScheme

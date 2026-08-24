@@ -83,13 +83,13 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Whisper Flow",
+                        text = "Bolnaa",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = FlowTextPrimary
                     )
                     Text(
-                        text = "Voice Dictation & AI Formatter",
+                        text = "AI Voice Dictation & Auto-Paste",
                         style = MaterialTheme.typography.labelSmall,
                         color = FlowTextMuted
                     )
