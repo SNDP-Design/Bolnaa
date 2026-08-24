@@ -35,7 +35,7 @@ jobs:
 
       - name: Build Debug APK
         working-directory: whisper-flow-android
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Prepare APK Outputs
         run: |
