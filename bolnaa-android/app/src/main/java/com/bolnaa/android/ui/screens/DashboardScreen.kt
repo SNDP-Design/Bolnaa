@@ -79,23 +79,8 @@ fun DashboardScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        brush = Brush.linearGradient(listOf(FlowPrimary, FlowAccent)),
-                        shape = RoundedCornerShape(12.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.GraphicEq,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
+            BolnaaLogoIcon(modifier = Modifier.size(46.dp))
+            Spacer(modifier = Modifier.width(14.dp))
             Column {
                 Text(
                     text = "Bolnaa",
@@ -355,5 +340,114 @@ fun DashboardScreen(
         }
 
         Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val cornerRadius = h * 0.28f
+
+        // Squircle gradient background
+        drawRoundRect(
+            brush = Brush.linearGradient(
+                colors = listOf(Color(0xFF7C3AED), Color(0xFF6366F1), Color(0xFF4338CA)),
+                start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                end = androidx.compose.ui.geometry.Offset(w, h)
+            ),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius)
+        )
+
+        // Subtle glowing border
+        drawRoundRect(
+            color = Color(0xFFA5B4FC).copy(alpha = 0.6f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2.dp.toPx())
+        )
+
+        val cx = w / 2f
+        val cy = h / 2f
+        val scale = w / 108f
+
+        // Microphone capsule
+        val micW = 16f * scale
+        val micH = 27f * scale
+        drawRoundRect(
+            color = Color.White,
+            topLeft = androidx.compose.ui.geometry.Offset(cx - micW / 2, cy - micH / 2 - 3 * scale),
+            size = androidx.compose.ui.geometry.Size(micW, micH),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(micW / 2, micW / 2)
+        )
+
+        // U-Cradle
+        val strokeWidth = 3.2f * scale
+        val cradlePath = androidx.compose.ui.graphics.Path().apply {
+            val cradleR = 13f * scale
+            addArc(
+                oval = androidx.compose.ui.geometry.Rect(cx - cradleR, cy - cradleR - 2 * scale, cx + cradleR, cy + cradleR - 2 * scale),
+                startAngleDegrees = 0f,
+                sweepAngleDegrees = 180f
+            )
+        }
+        drawPath(
+            path = cradlePath,
+            color = Color.White,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = strokeWidth,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        )
+
+        // Stand & base
+        drawLine(
+            color = Color.White,
+            start = androidx.compose.ui.geometry.Offset(cx, cy + 11f * scale),
+            end = androidx.compose.ui.geometry.Offset(cx, cy + 20f * scale),
+            strokeWidth = strokeWidth,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        drawLine(
+            color = Color.White,
+            start = androidx.compose.ui.geometry.Offset(cx - 8f * scale, cy + 20f * scale),
+            end = androidx.compose.ui.geometry.Offset(cx + 8f * scale, cy + 20f * scale),
+            strokeWidth = strokeWidth,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+
+        // Left soundwave arc
+        val leftWave = androidx.compose.ui.graphics.Path().apply {
+            moveTo(cx - 21f * scale, cy - 8f * scale)
+            quadraticTo(
+                cx - 25f * scale, cy + 1f * scale,
+                cx - 21f * scale, cy + 10f * scale
+            )
+        }
+        drawPath(
+            path = leftWave,
+            color = Color.White,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = strokeWidth,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        )
+
+        // Right soundwave arc
+        val rightWave = androidx.compose.ui.graphics.Path().apply {
+            moveTo(cx + 21f * scale, cy - 8f * scale)
+            quadraticTo(
+                cx + 25f * scale, cy + 1f * scale,
+                cx + 21f * scale, cy + 10f * scale
+            )
+        }
+        drawPath(
+            path = rightWave,
+            color = Color.White,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = strokeWidth,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        )
     }
 }

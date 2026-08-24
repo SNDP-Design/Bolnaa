@@ -258,7 +258,7 @@ class FloatingBubbleView @JvmOverloads constructor(
             )
             else -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#4338CA"), Color.parseColor("#7C3AED")),
+                intArrayOf(Color.parseColor("#7C3AED"), Color.parseColor("#6366F1"), Color.parseColor("#4338CA")),
                 null, Shader.TileMode.CLAMP
             )
         }
@@ -291,8 +291,9 @@ class FloatingBubbleView @JvmOverloads constructor(
     private fun drawIdleState(canvas: Canvas, w: Float, h: Float) {
         val cx = w / 2f
         val cy = h / 2f
+        val scale = w / 108f
 
-        // Draw Bolnaa Mic + Waveform silhouette matching app icon
+        // Draw Bolnaa Mic + Waveform silhouette matching app icon & home screen
         val whiteFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.FILL
@@ -301,28 +302,38 @@ class FloatingBubbleView @JvmOverloads constructor(
         val whiteStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.STROKE
-            strokeWidth = 2.2f * density
+            strokeWidth = 3.2f * scale
             strokeCap = Paint.Cap.ROUND
         }
 
         // Center mic capsule
-        val micWidth = 6.5f * density
-        val micHeight = 13f * density
-        val micRect = RectF(cx - micWidth / 2, cy - micHeight / 2 - 2 * density, cx + micWidth / 2, cy + micHeight / 2 - 2 * density)
-        canvas.drawRoundRect(micRect, micWidth / 2, micWidth / 2, whiteFill)
+        val micW = 16f * scale
+        val micH = 27f * scale
+        val micRect = RectF(cx - micW / 2, cy - micH / 2 - 3 * scale, cx + micW / 2, cy + micH / 2 - 3 * scale)
+        canvas.drawRoundRect(micRect, micW / 2, micW / 2, whiteFill)
 
         // Mic U-cradle
-        val cradleRect = RectF(cx - 7.5f * density, cy - 7.5f * density, cx + 7.5f * density, cy + 7.5f * density)
+        val cradleR = 13f * scale
+        val cradleRect = RectF(cx - cradleR, cy - cradleR - 2 * scale, cx + cradleR, cy + cradleR - 2 * scale)
         canvas.drawArc(cradleRect, 0f, 180f, false, whiteStroke)
 
-        // Mic stand
-        canvas.drawLine(cx, cy + 7.5f * density, cx, cy + 11.5f * density, whiteStroke)
+        // Mic stand & base
+        canvas.drawLine(cx, cy + 11f * scale, cx, cy + 20f * scale, whiteStroke)
+        canvas.drawLine(cx - 8f * scale, cy + 20f * scale, cx + 8f * scale, cy + 20f * scale, whiteStroke)
 
-        // Left audio sound wave bar
-        canvas.drawLine(cx - 12f * density, cy - 4f * density, cx - 12f * density, cy + 4f * density, whiteStroke)
+        // Left audio sound wave arc
+        val leftPath = Path().apply {
+            moveTo(cx - 21f * scale, cy - 8f * scale)
+            quadTo(cx - 25f * scale, cy + 1f * scale, cx - 21f * scale, cy + 10f * scale)
+        }
+        canvas.drawPath(leftPath, whiteStroke)
 
-        // Right audio sound wave bar
-        canvas.drawLine(cx + 12f * density, cy - 4f * density, cx + 12f * density, cy + 4f * density, whiteStroke)
+        // Right audio sound wave arc
+        val rightPath = Path().apply {
+            moveTo(cx + 21f * scale, cy - 8f * scale)
+            quadTo(cx + 25f * scale, cy + 1f * scale, cx + 21f * scale, cy + 10f * scale)
+        }
+        canvas.drawPath(rightPath, whiteStroke)
     }
 
     private fun drawListeningState(canvas: Canvas, w: Float, h: Float) {
