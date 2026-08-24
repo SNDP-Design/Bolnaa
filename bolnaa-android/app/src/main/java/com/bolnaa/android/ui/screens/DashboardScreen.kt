@@ -1,7 +1,5 @@
 package com.bolnaa.android.ui.screens
 
-import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -29,43 +26,39 @@ import androidx.compose.ui.unit.sp
 import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.data.models.FlowTone
 import com.bolnaa.android.data.models.SttEngine
-import com.bolnaa.android.ui.components.WaveformPreview
 import com.bolnaa.android.ui.theme.*
-import com.bolnaa.android.updater.AppUpdateManager
-import com.bolnaa.android.updater.UpdateStatus
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     preferencesManager: PreferencesManager,
-    updateManager: AppUpdateManager,
     isOverlayPermissionGranted: Boolean,
     isAccessibilityPermissionGranted: Boolean,
     isMicPermissionGranted: Boolean,
-    isOverlayServiceRunning: Boolean,
-    onToggleService: (Boolean) -> Unit,
     onOpenSetupWizard: () -> Unit,
     onOpenPlayground: () -> Unit
 ) {
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    // State collected from DataStore
+    // Preferences state
     val selectedEngine by preferencesManager.sttEngine.collectAsState(initial = SttEngine.GROQ)
-    val selectedTone by preferencesManager.flowTone.collectAsState(initial = FlowTone.NATURAL)
     val groqKey by preferencesManager.groqApiKey.collectAsState(initial = "")
     val openAiKey by preferencesManager.openAiApiKey.collectAsState(initial = "")
     val isAiCleanupEnabled by preferencesManager.isAiCleanupEnabled.collectAsState(initial = true)
     val isAutoStopSilence by preferencesManager.isAutoStopSilence.collectAsState(initial = true)
     val silenceTimeoutMs by preferencesManager.silenceTimeoutMs.collectAsState(initial = 1600)
     val bubbleSizeDp by preferencesManager.bubbleSizeDp.collectAsState(initial = 58)
-    val isAttachToKeyboard by preferencesManager.isAttachToKeyboardEnabled.collectAsState(initial = true)
     val isFreePlacement by preferencesManager.isFreePlacementEnabled.collectAsState(initial = true)
     val isHapticsEnabled by preferencesManager.isHapticFeedbackEnabled.collectAsState(initial = true)
     val customVocab by preferencesManager.customVocabulary.collectAsState(initial = "")
-    val updateStatus by updateManager.updateStatus.collectAsState()
+
+    // Ensure Natural tone is always active
+    LaunchedEffect(Unit) {
+        preferencesManager.setFlowTone(FlowTone.NATURAL)
+        preferencesManager.setAttachToKeyboardEnabled(true)
+    }
 
     // Local UI state for text fields
     var groqInput by remember(groqKey) { mutableStateOf(groqKey) }
@@ -122,7 +115,7 @@ fun DashboardScreen(
                 }
             }
 
-            // Test Playground button
+            // Test Playground Button
             FilledTonalButton(
                 onClick = onOpenPlayground,
                 colors = ButtonDefaults.filledTonalButtonColors(
@@ -186,65 +179,6 @@ fun DashboardScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
-
-        // --- Master Service Card (Floating Bubble Toggle) ---
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, FlowBorder, RoundedCornerShape(20.dp)),
-            shape = RoundedCornerShape(20.dp),
-            color = FlowSurface
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Floating Bolnaa Bubble",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = FlowTextPrimary
-                        )
-                        Text(
-                            text = if (isOverlayServiceRunning) "Bubble active over all apps" else "Turn on to show bubble",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isOverlayServiceRunning) FlowSuccess else FlowTextMuted
-                        )
-                    }
-
-                    Switch(
-                        checked = isOverlayServiceRunning,
-                        onCheckedChange = { isChecked ->
-                            if (isChecked && !allPermissionsGranted) {
-                                onOpenSetupWizard()
-                            } else {
-                                onToggleService(isChecked)
-                            }
-                        },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = FlowPrimary,
-                            uncheckedThumbColor = FlowTextMuted,
-                            uncheckedTrackColor = FlowSurfaceVariant
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Waveform illustration
-                WaveformPreview(
-                    isListening = isOverlayServiceRunning,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         // ==========================================
         // 1. FLOATING BUBBLE CUSTOMIZATION
@@ -348,25 +282,6 @@ fun DashboardScreen(
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
 
-                // Show only when keyboard opens
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Show Only When Keyboard Opens", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text("Auto pops up above your keypad when typing in any app and hides when dismissed", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
-                    }
-                    Switch(
-                        checked = isAttachToKeyboard,
-                        onCheckedChange = { coroutineScope.launch { preferencesManager.setAttachToKeyboardEnabled(it) } },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
-                    )
-                }
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
-
                 // Free Placement anywhere toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -375,7 +290,7 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Place Anywhere on Screen", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text("Drag and drop the bubble anywhere on your screen freely without forced edge-snapping", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                        Text("Drag and drop the bubble anywhere freely without forced edge-snapping", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
                     }
                     Switch(
                         checked = isFreePlacement,
@@ -408,7 +323,7 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // ==========================================
-        // 2. SPEECH-TO-TEXT & API KEYS
+        // 2. SPEECH RECOGNITION (STT) & API KEYS
         // ==========================================
         Text(
             text = "Speech Recognition (STT)",
@@ -558,10 +473,10 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // ==========================================
-        // 3. AI SMART CLEAN-UP & TONE
+        // 3. AI SMART CLEAN-UP & VOCABULARY
         // ==========================================
         Text(
-            text = "AI Smart Formatting & Tone",
+            text = "AI Smart Clean-up & Audio",
             style = MaterialTheme.typography.titleMedium,
             color = FlowTextPrimary
         )
@@ -582,49 +497,13 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Bolnaa Smart AI Clean-up", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text("Strips 'um/uh', fixes grammar, and formats automatically", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                        Text("Removes 'um/uh', fixes grammar, and polishes voice flow naturally", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
                     }
                     Switch(
                         checked = isAiCleanupEnabled,
                         onCheckedChange = { coroutineScope.launch { preferencesManager.setAiCleanupEnabled(it) } },
                         colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
                     )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-                Text("Select Output Tone:", style = MaterialTheme.typography.labelMedium, color = FlowTextSecondary)
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Tone selection chips
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FlowTone.values().forEach { tone ->
-                        val isSelected = selectedTone == tone
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable {
-                                    coroutineScope.launch { preferencesManager.setFlowTone(tone) }
-                                }
-                                .border(
-                                    1.dp,
-                                    if (isSelected) FlowPrimary else FlowBorder,
-                                    RoundedCornerShape(10.dp)
-                                ),
-                            color = if (isSelected) FlowPrimary.copy(alpha = 0.2f) else FlowSurfaceVariant
-                        ) {
-                            Text(
-                                text = tone.title.split(" ").firstOrNull() ?: tone.name,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isSelected) FlowPrimary else FlowTextSecondary,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
@@ -691,84 +570,6 @@ fun DashboardScreen(
                             inactiveTrackColor = FlowSurfaceVariant
                         )
                     )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // ==========================================
-        // 4. LIVE UPDATES (OTA)
-        // ==========================================
-        Text(
-            text = "Live Over-The-Air (OTA) Updates",
-            style = MaterialTheme.typography.titleMedium,
-            color = FlowTextPrimary
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            color = FlowSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, FlowBorder)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Linked to SNDP-Design/Bolnaa", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text(
-                            text = when (val s = updateStatus) {
-                                is UpdateStatus.Checking -> "Checking for new cloud build..."
-                                is UpdateStatus.Available -> "🎉 New update available: ${s.version}"
-                                is UpdateStatus.Downloading -> "Downloading update (${(s.progress * 100).toInt()}%)..."
-                                is UpdateStatus.ReadyToInstall -> "Update downloaded. Ready to install."
-                                is UpdateStatus.UpToDate -> "Your app is running the latest build."
-                                is UpdateStatus.Error -> "Unable to reach GitHub releases."
-                                else -> "Cloud builds update here automatically."
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = when (updateStatus) {
-                                is UpdateStatus.Available -> FlowSuccess
-                                is UpdateStatus.Error -> FlowWarning
-                                else -> FlowTextSecondary
-                            }
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            val currentStatus = updateStatus
-                            if (currentStatus is UpdateStatus.Available) {
-                                coroutineScope.launch {
-                                    updateManager.downloadAndInstall(currentStatus.downloadUrl)
-                                }
-                            } else {
-                                coroutineScope.launch {
-                                    updateManager.checkForUpdates()
-                                }
-                                Toast.makeText(context, "Checking GitHub for updates...", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (updateStatus is UpdateStatus.Available) FlowSuccess else FlowPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = when (updateStatus) {
-                                is UpdateStatus.Checking -> "Checking..."
-                                is UpdateStatus.Available -> "Install Now"
-                                is UpdateStatus.Downloading -> "Downloading..."
-                                else -> "Check Updates"
-                            },
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
                 }
             }
         }

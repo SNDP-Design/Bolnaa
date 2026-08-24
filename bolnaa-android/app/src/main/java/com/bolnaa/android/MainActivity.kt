@@ -86,21 +86,9 @@ class MainActivity : ComponentActivity() {
                             Screen.DASHBOARD -> {
                                 DashboardScreen(
                                     preferencesManager = preferencesManager,
-                                    updateManager = updateManager,
                                     isOverlayPermissionGranted = hasOverlayPermission,
                                     isAccessibilityPermissionGranted = hasAccessibilityPermission,
                                     isMicPermissionGranted = hasMicPermission,
-                                    isOverlayServiceRunning = isOverlayRunning,
-                                    onToggleService = { enable ->
-                                        if (enable) {
-                                            startOverlayService()
-                                        } else {
-                                            stopOverlayService()
-                                        }
-                                        coroutineScope.launch {
-                                            preferencesManager.setServiceActive(enable)
-                                        }
-                                    },
                                     onOpenSetupWizard = { currentScreen = Screen.SETUP_WIZARD },
                                     onOpenPlayground = { currentScreen = Screen.PLAYGROUND }
                                 )
@@ -138,6 +126,9 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         updatePermissionStates()
+        if (hasOverlayPermission && hasMicPermission && hasAccessibilityPermission && !isOverlayRunning) {
+            startOverlayService()
+        }
     }
 
     private fun updatePermissionStates() {
