@@ -51,11 +51,13 @@ fun DashboardScreen(
     val isHapticsEnabled by preferencesManager.isHapticFeedbackEnabled.collectAsState(initial = true)
     val customVocab by preferencesManager.customVocabulary.collectAsState(initial = "")
 
-    // Ensure Groq Whisper and Natural Tone are always enforced as defaults
+    // Ensure defaults are permanently enforced
     LaunchedEffect(Unit) {
         preferencesManager.setSttEngine(SttEngine.GROQ)
         preferencesManager.setFlowTone(FlowTone.NATURAL)
         preferencesManager.setAttachToKeyboardEnabled(true)
+        preferencesManager.setBubbleSizeDp(72)
+        preferencesManager.setFreePlacementEnabled(true)
     }
 
     // Local UI state for text fields
@@ -155,149 +157,7 @@ fun DashboardScreen(
         }
 
         // ==========================================
-        // 1. FLOATING BUBBLE CUSTOMIZATION
-        // ==========================================
-        Text(
-            text = "Floating Bubble Appearance",
-            style = MaterialTheme.typography.titleMedium,
-            color = FlowTextPrimary
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            color = FlowSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, FlowBorder)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // Bubble Size Slider & Presets
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Bubble Size", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text("Live dimensions: ${bubbleSizeDp}dp", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
-                    }
-                    // Visual circular preview badge
-                    Box(
-                        modifier = Modifier
-                            .size((bubbleSizeDp * 0.6f).dp.coerceIn(26.dp, 48.dp))
-                            .clip(CircleShape)
-                            .background(FlowPrimary.copy(alpha = 0.25f))
-                            .border(1.5.dp, FlowPrimary, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Preset chips
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf(
-                        "Small" to 46,
-                        "Medium" to 56,
-                        "Large" to 66,
-                        "X-Large" to 76
-                    ).forEach { (label, size) ->
-                        val isSelected = bubbleSizeDp == size
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable {
-                                    coroutineScope.launch { preferencesManager.setBubbleSizeDp(size) }
-                                }
-                                .border(
-                                    1.dp,
-                                    if (isSelected) FlowPrimary else FlowBorder,
-                                    RoundedCornerShape(10.dp)
-                                ),
-                            color = if (isSelected) FlowPrimary.copy(alpha = 0.2f) else FlowSurfaceVariant
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isSelected) FlowPrimary else FlowTextSecondary,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Slider(
-                    value = bubbleSizeDp.toFloat(),
-                    onValueChange = {
-                        coroutineScope.launch { preferencesManager.setBubbleSizeDp(it.toInt()) }
-                    },
-                    valueRange = 42f..80f,
-                    steps = 18,
-                    colors = SliderDefaults.colors(
-                        thumbColor = FlowPrimary,
-                        activeTrackColor = FlowPrimary,
-                        inactiveTrackColor = FlowSurfaceVariant
-                    )
-                )
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
-
-                // Free Placement anywhere toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Place Anywhere on Screen", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text("Drag and drop the bubble anywhere freely without forced edge-snapping", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
-                    }
-                    Switch(
-                        checked = isFreePlacement,
-                        onCheckedChange = { coroutineScope.launch { preferencesManager.setFreePlacementEnabled(it) } },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
-                    )
-                }
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
-
-                // Haptic feedback toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Haptic Feedback", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text("Gently vibrate on start, stop, and paste", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
-                    }
-                    Switch(
-                        checked = isHapticsEnabled,
-                        onCheckedChange = { coroutineScope.launch { preferencesManager.setHapticFeedbackEnabled(it) } },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // ==========================================
-        // 2. GROQ WHISPER API KEY
+        // 1. GROQ WHISPER API KEY
         // ==========================================
         Text(
             text = "Groq Whisper API Key",
@@ -470,6 +330,25 @@ fun DashboardScreen(
                             activeTrackColor = FlowPrimary,
                             inactiveTrackColor = FlowSurfaceVariant
                         )
+                    )
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
+
+                // Haptic feedback toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Haptic Feedback", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
+                        Text("Gently vibrate on start, stop, and paste", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                    }
+                    Switch(
+                        checked = isHapticsEnabled,
+                        onCheckedChange = { coroutineScope.launch { preferencesManager.setHapticFeedbackEnabled(it) } },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
                     )
                 }
             }

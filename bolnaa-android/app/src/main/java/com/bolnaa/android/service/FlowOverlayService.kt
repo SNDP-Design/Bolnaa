@@ -129,7 +129,7 @@ class FlowOverlayService : Service() {
 
     private fun createFloatingBubble() {
         val density = resources.displayMetrics.density
-        val baseSize = (58 * density).toInt()
+        val baseSize = (72 * density).toInt()
 
         val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY

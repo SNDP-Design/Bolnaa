@@ -43,8 +43,8 @@ class FloatingBubbleView @JvmOverloads constructor(
 
     // Dimensions
     private val density = resources.displayMetrics.density
-    private var baseSize = (56 * density).toInt()
-    private var expandedWidth = (140 * density).toInt()
+    private var baseSize = (72 * density).toInt()
+    private var expandedWidth = (168 * density).toInt()
 
     // Paints
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
