@@ -39,27 +39,27 @@
         android:pathData="M67,49 C67,56.2 61.2,62 54,62 C46.8,62 41,56.2 41,49"
         android:strokeWidth="3.2"
         android:strokeColor="#FFFFFF"
-        android:strokeCap="round" />
+        android:strokeLineCap="round" />
 
     <!-- Mic stand & base -->
     <path
         android:pathData="M54,62 L54,71 M47,71 L61,71"
         android:strokeWidth="3.2"
         android:strokeColor="#FFFFFF"
-        android:strokeCap="round" />
+        android:strokeLineCap="round" />
 
     <!-- Left Sound Wave Accent -->
     <path
         android:pathData="M34,44 C31,48 31,54 34,58"
         android:strokeWidth="2.2"
         android:strokeColor="#C4B5FD"
-        android:strokeCap="round" />
+        android:strokeLineCap="round" />
 
     <!-- Right Sound Wave Accent -->
     <path
         android:pathData="M74,44 C77,48 77,54 74,58"
         android:strokeWidth="2.2"
         android:strokeColor="#C4B5FD"
-        android:strokeCap="round" />
+        android:strokeLineCap="round" />
 
 </vector>
