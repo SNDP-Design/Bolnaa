@@ -16,7 +16,7 @@ class FlowTranscriptionEngine(
     companion object {
         private const val TAG = "FlowTranscriptionEngine"
         private const val HINGLISH_WHISPER_PROMPT =
-            "Namaste, main theek hoon, aap kaise ho? Transcribe all Hindi, Hinglish, and Indian speech in English letters / Roman script (Hinglish). For example: kya haal hai, theek hai, bilkul, main aa raha hoon, kya kar rahe ho, aaj bahut kaam hai. Do NOT use Devanagari script."
+            "Voice dictation in English and Hinglish (English letters only). E.g. Hello, Namaste, kya haal hai, main theek hoon, let's meet tomorrow."
     }
 
     private var groqApiKey = ""
@@ -44,7 +44,7 @@ class FlowTranscriptionEngine(
         Log.d(TAG, "Processing audio file (${audioFile.length()} bytes) with engine: $preferredEngine")
 
         val effectivePrompt = if (prompt.isNotBlank()) {
-            "$prompt. Transcribe Hindi speech in English letters (Hinglish / Roman script): Namaste, main theek hoon, aap kaise ho, theek hai, kya kar rahe ho."
+            "$prompt. Write exclusively in English letters (English and Hinglish)."
         } else {
             HINGLISH_WHISPER_PROMPT
         }
@@ -70,7 +70,6 @@ class FlowTranscriptionEngine(
                 }
             }
             SttEngine.LOCAL -> {
-                // If local engine is selected with audio file, we try Groq/OpenAI if available, else error
                 if (groqApiKey.isNotBlank()) {
                     groqClient.transcribeAudio(audioFile, effectivePrompt)
                 } else {
@@ -95,18 +94,27 @@ class FlowTranscriptionEngine(
             return Result.success("")
         }
 
+        // Sanitize raw text before sending to LLM (filters foreign hallucinations & transliterates Hindi)
+        val sanitizedRaw = ScriptSanitizer.sanitizeToEnglishLettersOnly(rawText)
+        if (sanitizedRaw.isBlank()) {
+            return Result.success("")
+        }
+
         // 2. Perform Bolnaa Smart AI Formatting
         val formattedText = if (isAiCleanupEnabled) {
             smartFormatter.formatTranscription(
-                rawText = rawText,
+                rawText = sanitizedRaw,
                 tone = tone,
                 customVocabulary = customVocab
             )
         } else {
-            DevanagariTransliterator.transliterate(rawText.trim())
+            sanitizedRaw
         }
 
-        return Result.success(formattedText)
+        // Final safety guarantee: strictly English letters and punctuation
+        val finalResult = ScriptSanitizer.sanitizeToEnglishLettersOnly(formattedText)
+
+        return Result.success(finalResult)
     }
 
     suspend fun formatRawText(rawText: String): String {
@@ -114,6 +122,7 @@ class FlowTranscriptionEngine(
         openAiApiKey = preferencesManager.openAiApiKey.first()
         val tone = preferencesManager.flowTone.first()
         val customVocab = preferencesManager.customVocabulary.first()
-        return smartFormatter.formatTranscription(rawText, tone, customVocab)
+        val formatted = smartFormatter.formatTranscription(rawText, tone, customVocab)
+        return ScriptSanitizer.sanitizeToEnglishLettersOnly(formatted)
     }
 }

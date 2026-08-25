@@ -26,14 +26,16 @@ class FlowSmartFormatter(
         private const val OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 
         private const val HINGLISH_SCRIPT_RULE = """
-CRITICAL SCRIPT & LANGUAGE RULE:
-1. If the spoken text is in Hindi or Hinglish, ALWAYS write/format it in English letters / Roman alphabet (Hinglish).
+STRICT LANGUAGE & ALPHABET RULES:
+1. Understand ONLY Hindi, English, and Hinglish. Reject or ignore any other foreign languages.
+2. If the spoken text is in Hindi or Hinglish, ALWAYS write it in English letters / Roman alphabet (Hinglish).
    - Example: If the speech is "क्या कर रहे हो", output "Kya kar rahe ho".
    - Example: If the speech is "आज बहुत काम है भाई", output "Aaj bahut kaam hai bhai".
    - Example: If the speech is "Main theek hoon, aap batao", output "Main theek hoon, aap batao".
-2. NEVER output Devanagari script (e.g. do NOT output 'क्या', 'है', 'कर' in Devanagari). ALWAYS write in English alphabet (Hinglish).
-3. Pure English words and sentences must remain in natural, polished English.
-4. Output ONLY the formatted text with no introductory phrases, quotes, or meta commentary.
+3. NEVER output any non-English/non-Latin scripts. NEVER output Arabic, Urdu, Japanese, Korean, Chinese, Russian, or Devanagari characters.
+4. If the raw transcript contains silence hallucinations in foreign languages (like Japanese, Korean, Arabic, Urdu subtitle artifacts), REMOVE THEM COMPLETELY and output nothing.
+5. The final output must strictly consist ONLY of standard English letters (A-Z, a-z), numbers, and standard punctuation.
+6. Output ONLY the formatted text with no introductory phrases, quotes, or meta commentary.
 """
     }
 
@@ -51,7 +53,7 @@ CRITICAL SCRIPT & LANGUAGE RULE:
     private data class ChatRequest(
         val model: String,
         val messages: List<ChatMessage>,
-        val temperature: Float = 0.2f,
+        val temperature: Float = 0.0f,
         val max_tokens: Int = 1000
     )
 
@@ -66,28 +68,15 @@ CRITICAL SCRIPT & LANGUAGE RULE:
         tone: FlowTone,
         customVocabulary: String = ""
     ): String = withContext(Dispatchers.IO) {
-        if (rawText.isBlank()) return@withContext rawText
+        val sanitized = ScriptSanitizer.sanitizeToEnglishLettersOnly(rawText)
+        if (sanitized.isBlank()) return@withContext ""
 
         val groqKey = groqKeyProvider()
         val openAiKey = openAiKeyProvider()
 
         if (tone == FlowTone.VERBATIM) {
-            val cleaned = basicRuleClean(rawText)
-            if (DevanagariTransliterator.hasDevanagari(cleaned)) {
-                // If LLM is available, use fast Llama-3.1-8b for verbatim transliteration
-                if (groqKey.isNotBlank()) {
-                    val verbatimPrompt = "Transcribe the following speech word-for-word into English letters / Roman script (Hinglish). Do NOT add or remove words. NEVER output Devanagari script. Output ONLY the transliterated text."
-                    val result = callChatApi(GROQ_CHAT_URL, groqKey, "llama-3.1-8b-instant", cleaned, verbatimPrompt, customVocabulary)
-                    if (result != null) return@withContext result
-                } else if (openAiKey.isNotBlank()) {
-                    val verbatimPrompt = "Transcribe the following speech word-for-word into English letters / Roman script (Hinglish). Do NOT add or remove words. NEVER output Devanagari script. Output ONLY the transliterated text."
-                    val result = callChatApi(OPENAI_CHAT_URL, openAiKey, "gpt-4o-mini", cleaned, verbatimPrompt, customVocabulary)
-                    if (result != null) return@withContext result
-                }
-                // Fallback to offline rule-based transliterator
-                return@withContext DevanagariTransliterator.transliterate(cleaned)
-            }
-            return@withContext cleaned
+            val cleaned = basicRuleClean(sanitized)
+            return@withContext ScriptSanitizer.sanitizeToEnglishLettersOnly(cleaned)
         }
 
         // 1. Try Groq (Ultra-fast Llama-3.1-8b ~150ms)
@@ -96,11 +85,11 @@ CRITICAL SCRIPT & LANGUAGE RULE:
                 url = GROQ_CHAT_URL,
                 apiKey = groqKey,
                 model = "llama-3.1-8b-instant",
-                rawText = rawText,
+                rawText = sanitized,
                 systemInstruction = "${tone.systemPrompt}\n\n$HINGLISH_SCRIPT_RULE",
                 customVocabulary = customVocabulary
             )
-            if (groqResult != null) return@withContext groqResult
+            if (groqResult != null) return@withContext ScriptSanitizer.sanitizeToEnglishLettersOnly(groqResult)
         }
 
         // 2. Try OpenAI (gpt-4o-mini)
@@ -109,15 +98,15 @@ CRITICAL SCRIPT & LANGUAGE RULE:
                 url = OPENAI_CHAT_URL,
                 apiKey = openAiKey,
                 model = "gpt-4o-mini",
-                rawText = rawText,
+                rawText = sanitized,
                 systemInstruction = "${tone.systemPrompt}\n\n$HINGLISH_SCRIPT_RULE",
                 customVocabulary = customVocabulary
             )
-            if (openAiResult != null) return@withContext openAiResult
+            if (openAiResult != null) return@withContext ScriptSanitizer.sanitizeToEnglishLettersOnly(openAiResult)
         }
 
         // 3. Fallback to smart local rule-based cleanup + transliteration
-        return@withContext localRuleBasedClean(rawText)
+        return@withContext ScriptSanitizer.sanitizeToEnglishLettersOnly(localRuleBasedClean(sanitized))
     }
 
     private fun callChatApi(
@@ -139,7 +128,8 @@ CRITICAL SCRIPT & LANGUAGE RULE:
                 messages = listOf(
                     ChatMessage(role = "system", content = fullSystemPrompt),
                     ChatMessage(role = "user", content = rawText)
-                )
+                ),
+                temperature = 0.0f
             )
 
             val requestJson = json.encodeToString(ChatRequest.serializer(), requestBodyObj)
@@ -159,10 +149,8 @@ CRITICAL SCRIPT & LANGUAGE RULE:
                     if (!result.isNullOrBlank()) {
                         // Strip outer quotes if any
                         var clean = result.removeSurrounding("\"").removeSurrounding("'")
-                        // If any Devanagari remains, transliterate to English letters
-                        if (DevanagariTransliterator.hasDevanagari(clean)) {
-                            clean = DevanagariTransliterator.transliterate(clean)
-                        }
+                        // Sanitize to English letters only
+                        clean = ScriptSanitizer.sanitizeToEnglishLettersOnly(clean)
                         apiResult = clean
                     } else {
                         apiResult = null
@@ -184,8 +172,7 @@ CRITICAL SCRIPT & LANGUAGE RULE:
      * Transliterates any Devanagari to English letters, and removes filler words.
      */
     private fun localRuleBasedClean(text: String): String {
-        // First, transliterate any Devanagari to English letters
-        var cleaned = DevanagariTransliterator.transliterate(text)
+        var cleaned = ScriptSanitizer.sanitizeToEnglishLettersOnly(text)
 
         // Common speech fillers regex
         val fillerPatterns = listOf(
@@ -217,10 +204,7 @@ CRITICAL SCRIPT & LANGUAGE RULE:
     }
 
     private fun basicRuleClean(text: String): String {
-        var cleaned = text.trim()
-        if (DevanagariTransliterator.hasDevanagari(cleaned)) {
-            cleaned = DevanagariTransliterator.transliterate(cleaned)
-        }
+        var cleaned = ScriptSanitizer.sanitizeToEnglishLettersOnly(text)
         if (cleaned.isNotEmpty()) {
             cleaned = cleaned.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         }

@@ -52,6 +52,7 @@ class GroqWhisperClient(private val apiKeyProvider: () -> String) {
                 audioFile.asRequestBody("audio/wav".toMediaTypeOrNull())
             )
             .addFormDataPart("response_format", "json")
+            .addFormDataPart("temperature", "0.0")
 
         if (prompt.isNotBlank()) {
             requestBodyBuilder.addFormDataPart("prompt", prompt)
