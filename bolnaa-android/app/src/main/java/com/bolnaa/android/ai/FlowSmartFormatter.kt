@@ -24,6 +24,17 @@ class FlowSmartFormatter(
         private const val TAG = "FlowSmartFormatter"
         private const val GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
         private const val OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
+
+        private const val HINGLISH_SCRIPT_RULE = """
+CRITICAL SCRIPT & LANGUAGE RULE:
+1. If the spoken text is in Hindi or Hinglish, ALWAYS write/format it in English letters / Roman alphabet (Hinglish).
+   - Example: If the speech is "क्या कर रहे हो", output "Kya kar rahe ho".
+   - Example: If the speech is "आज बहुत काम है भाई", output "Aaj bahut kaam hai bhai".
+   - Example: If the speech is "Main theek hoon, aap batao", output "Main theek hoon, aap batao".
+2. NEVER output Devanagari script (e.g. do NOT output 'क्या', 'है', 'कर' in Devanagari). ALWAYS write in English alphabet (Hinglish).
+3. Pure English words and sentences must remain in natural, polished English.
+4. Output ONLY the formatted text with no introductory phrases, quotes, or meta commentary.
+"""
     }
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -57,12 +68,27 @@ class FlowSmartFormatter(
     ): String = withContext(Dispatchers.IO) {
         if (rawText.isBlank()) return@withContext rawText
 
-        if (tone == FlowTone.VERBATIM) {
-            return@withContext basicRuleClean(rawText)
-        }
-
         val groqKey = groqKeyProvider()
         val openAiKey = openAiKeyProvider()
+
+        if (tone == FlowTone.VERBATIM) {
+            val cleaned = basicRuleClean(rawText)
+            if (DevanagariTransliterator.hasDevanagari(cleaned)) {
+                // If LLM is available, use fast Llama-3.1-8b for verbatim transliteration
+                if (groqKey.isNotBlank()) {
+                    val verbatimPrompt = "Transcribe the following speech word-for-word into English letters / Roman script (Hinglish). Do NOT add or remove words. NEVER output Devanagari script. Output ONLY the transliterated text."
+                    val result = callChatApi(GROQ_CHAT_URL, groqKey, "llama-3.1-8b-instant", cleaned, verbatimPrompt, customVocabulary)
+                    if (result != null) return@withContext result
+                } else if (openAiKey.isNotBlank()) {
+                    val verbatimPrompt = "Transcribe the following speech word-for-word into English letters / Roman script (Hinglish). Do NOT add or remove words. NEVER output Devanagari script. Output ONLY the transliterated text."
+                    val result = callChatApi(OPENAI_CHAT_URL, openAiKey, "gpt-4o-mini", cleaned, verbatimPrompt, customVocabulary)
+                    if (result != null) return@withContext result
+                }
+                // Fallback to offline rule-based transliterator
+                return@withContext DevanagariTransliterator.transliterate(cleaned)
+            }
+            return@withContext cleaned
+        }
 
         // 1. Try Groq (Ultra-fast Llama-3.1-8b ~150ms)
         if (groqKey.isNotBlank()) {
@@ -71,7 +97,7 @@ class FlowSmartFormatter(
                 apiKey = groqKey,
                 model = "llama-3.1-8b-instant",
                 rawText = rawText,
-                tone = tone,
+                systemInstruction = "${tone.systemPrompt}\n\n$HINGLISH_SCRIPT_RULE",
                 customVocabulary = customVocabulary
             )
             if (groqResult != null) return@withContext groqResult
@@ -84,13 +110,13 @@ class FlowSmartFormatter(
                 apiKey = openAiKey,
                 model = "gpt-4o-mini",
                 rawText = rawText,
-                tone = tone,
+                systemInstruction = "${tone.systemPrompt}\n\n$HINGLISH_SCRIPT_RULE",
                 customVocabulary = customVocabulary
             )
             if (openAiResult != null) return@withContext openAiResult
         }
 
-        // 3. Fallback to smart local rule-based cleanup
+        // 3. Fallback to smart local rule-based cleanup + transliteration
         return@withContext localRuleBasedClean(rawText)
     }
 
@@ -99,19 +125,19 @@ class FlowSmartFormatter(
         apiKey: String,
         model: String,
         rawText: String,
-        tone: FlowTone,
+        systemInstruction: String,
         customVocabulary: String
     ): String? {
         try {
-            var systemPrompt = tone.systemPrompt
+            var fullSystemPrompt = systemInstruction
             if (customVocabulary.isNotBlank()) {
-                systemPrompt += "\nCustom vocabulary to prioritize: $customVocabulary"
+                fullSystemPrompt += "\nCustom vocabulary to prioritize: $customVocabulary"
             }
 
             val requestBodyObj = ChatRequest(
                 model = model,
                 messages = listOf(
-                    ChatMessage(role = "system", content = systemPrompt),
+                    ChatMessage(role = "system", content = fullSystemPrompt),
                     ChatMessage(role = "user", content = rawText)
                 )
             )
@@ -131,8 +157,13 @@ class FlowSmartFormatter(
                     val parsed = json.decodeFromString<ChatResponse>(body)
                     val result = parsed.choices.firstOrNull()?.message?.content?.trim()
                     if (!result.isNullOrBlank()) {
-                        // Strip any outer wrapping quotes if the model wrapped it
-                        apiResult = result.removeSurrounding("\"").removeSurrounding("'")
+                        // Strip outer quotes if any
+                        var clean = result.removeSurrounding("\"").removeSurrounding("'")
+                        // If any Devanagari remains, transliterate to English letters
+                        if (DevanagariTransliterator.hasDevanagari(clean)) {
+                            clean = DevanagariTransliterator.transliterate(clean)
+                        }
+                        apiResult = clean
                     } else {
                         apiResult = null
                     }
@@ -150,10 +181,11 @@ class FlowSmartFormatter(
 
     /**
      * Local offline rule-based cleanup when no API key or network is available.
-     * Removes filler words like 'um', 'uh', 'you know', 'er', 'ah', duplicates, etc.
+     * Transliterates any Devanagari to English letters, and removes filler words.
      */
     private fun localRuleBasedClean(text: String): String {
-        var cleaned = text
+        // First, transliterate any Devanagari to English letters
+        var cleaned = DevanagariTransliterator.transliterate(text)
 
         // Common speech fillers regex
         val fillerPatterns = listOf(
@@ -186,6 +218,9 @@ class FlowSmartFormatter(
 
     private fun basicRuleClean(text: String): String {
         var cleaned = text.trim()
+        if (DevanagariTransliterator.hasDevanagari(cleaned)) {
+            cleaned = DevanagariTransliterator.transliterate(cleaned)
+        }
         if (cleaned.isNotEmpty()) {
             cleaned = cleaned.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         }

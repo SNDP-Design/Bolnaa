@@ -15,6 +15,8 @@ class FlowTranscriptionEngine(
 
     companion object {
         private const val TAG = "FlowTranscriptionEngine"
+        private const val HINGLISH_WHISPER_PROMPT =
+            "Namaste, main theek hoon, aap kaise ho? Transcribe all Hindi, Hinglish, and Indian speech in English letters / Roman script (Hinglish). For example: kya haal hai, theek hai, bilkul, main aa raha hoon, kya kar rahe ho, aaj bahut kaam hai. Do NOT use Devanagari script."
     }
 
     private var groqApiKey = ""
@@ -41,22 +43,28 @@ class FlowTranscriptionEngine(
 
         Log.d(TAG, "Processing audio file (${audioFile.length()} bytes) with engine: $preferredEngine")
 
+        val effectivePrompt = if (prompt.isNotBlank()) {
+            "$prompt. Transcribe Hindi speech in English letters (Hinglish / Roman script): Namaste, main theek hoon, aap kaise ho, theek hai, kya kar rahe ho."
+        } else {
+            HINGLISH_WHISPER_PROMPT
+        }
+
         // 1. Perform Speech-to-Text
         val rawTranscriptionResult: Result<String> = when (preferredEngine) {
             SttEngine.GROQ -> {
                 if (groqApiKey.isNotBlank()) {
-                    groqClient.transcribeAudio(audioFile, prompt)
+                    groqClient.transcribeAudio(audioFile, effectivePrompt)
                 } else if (openAiApiKey.isNotBlank()) {
-                    openAiClient.transcribeAudio(audioFile, prompt)
+                    openAiClient.transcribeAudio(audioFile, effectivePrompt)
                 } else {
                     Result.failure(IllegalStateException("No Groq or OpenAI API key configured. Please configure in Settings or switch to Google Speech."))
                 }
             }
             SttEngine.OPENAI -> {
                 if (openAiApiKey.isNotBlank()) {
-                    openAiClient.transcribeAudio(audioFile, prompt)
+                    openAiClient.transcribeAudio(audioFile, effectivePrompt)
                 } else if (groqApiKey.isNotBlank()) {
-                    groqClient.transcribeAudio(audioFile, prompt)
+                    groqClient.transcribeAudio(audioFile, effectivePrompt)
                 } else {
                     Result.failure(IllegalStateException("No OpenAI API key configured. Please configure in Settings or switch to Google Speech."))
                 }
@@ -64,7 +72,7 @@ class FlowTranscriptionEngine(
             SttEngine.LOCAL -> {
                 // If local engine is selected with audio file, we try Groq/OpenAI if available, else error
                 if (groqApiKey.isNotBlank()) {
-                    groqClient.transcribeAudio(audioFile, prompt)
+                    groqClient.transcribeAudio(audioFile, effectivePrompt)
                 } else {
                     Result.failure(IllegalStateException("Local SpeechRecognizer requires direct microphone stream."))
                 }
@@ -95,7 +103,7 @@ class FlowTranscriptionEngine(
                 customVocabulary = customVocab
             )
         } else {
-            rawText.trim()
+            DevanagariTransliterator.transliterate(rawText.trim())
         }
 
         return Result.success(formattedText)
