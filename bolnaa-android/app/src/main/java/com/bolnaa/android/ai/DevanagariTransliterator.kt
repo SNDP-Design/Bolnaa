@@ -125,27 +125,27 @@ object DevanagariTransliterator {
     )
 
     private val VOWELS = mapOf(
-        'अ' to "a", 'आ' to "aa", 'इ' to "i", 'ई' to "ee", 'उ' to "u", 'ऊ' to "oo", 'ऋ' to "ri",
-        'ए' to "e", 'ऐ' to "ai", 'ओ' to "o", 'औ' to "au", 'ऍ' to "e", 'ऑ' to "o"
+        "अ" to "a", "आ" to "aa", "इ" to "i", "ई" to "ee", "उ" to "u", "ऊ" to "oo", "ऋ" to "ri",
+        "ए" to "e", "ऐ" to "ai", "ओ" to "o", "औ" to "au", "ऍ" to "e", "ऑ" to "o"
     )
 
     private val MATRAS = mapOf(
-        'ा' to "a", 'ि' to "i", 'ी' to "ee", 'ु' to "u", 'ू' to "oo", 'ृ' to "ri",
-        'े' to "e", 'ै' to "ai", 'ो' to "o", 'ौ' to "au", 'ॅ' to "e", 'ॉ' to "o"
+        "ा" to "a", "ि" to "i", "ी" to "ee", "ु" to "u", "ू" to "oo", "ृ" to "ri",
+        "े" to "e", "ै" to "ai", "ो" to "o", "ौ" to "au", "ॅ" to "e", "ॉ" to "o"
     )
 
     private val CONSONANTS = mapOf(
-        'क' to "k", 'ख' to "kh", 'ग' to "g", 'घ' to "gh", 'ङ' to "ng",
-        'च' to "ch", 'छ' to "chh", 'ज' to "j", 'झ' to "jh", 'ञ' to "ny",
-        'ट' to "t", 'ठ' to "th", 'ड' to "d", 'ढ' to "dh", 'ण' to "n",
-        'त' to "t", 'थ' to "th", 'द' to "d", 'ध' to "dh", 'न' to "n",
-        'प' to "p", 'फ' to "ph", 'ब' to "b", 'भ' to "bh", 'म' to "m",
-        'य' to "y", 'र' to "r", 'ल' to "l", 'व' to "v", 'श' to "sh", 'ष' to "sh", 'स' to "s", 'ह' to "h",
-        'क़' to "q", 'ख़' to "kh", 'ग़' to "gh", 'ज़' to "z", 'ड़' to "r", 'ढ़' to "rh", 'फ़' to "f"
+        "क" to "k", "ख" to "kh", "ग" to "g", "घ" to "gh", "ङ" to "ng",
+        "च" to "ch", "छ" to "chh", "ज" to "j", "झ" to "jh", "ञ" to "ny",
+        "ट" to "t", "ठ" to "th", "ड" to "d", "ढ" to "dh", "ण" to "n",
+        "त" to "t", "थ" to "th", "द" to "d", "ध" to "dh", "न" to "n",
+        "प" to "p", "फ" to "ph", "ब" to "b", "भ" to "bh", "म" to "m",
+        "य" to "y", "र" to "r", "ल" to "l", "व" to "v", "श" to "sh", "ष" to "sh", "स" to "s", "ह" to "h",
+        "क़" to "q", "ख़" to "kh", "ग़" to "gh", "ज़" to "z", "ड़" to "r", "ढ़" to "rh", "फ़" to "f"
     )
 
     private val SPECIAL = mapOf(
-        'ं' to "n", 'ँ' to "n", 'ः' to "h", '।' to ".", '॥' to "."
+        "ं" to "n", "ँ" to "n", "ः" to "h", "।" to ".", "॥" to "."
     )
 
     fun transliterate(text: String): String {
@@ -161,7 +161,7 @@ object DevanagariTransliterator {
             }
 
             // Extract punctuation prefix/suffix
-            val cleanWord = rawWord.trim { it in ",.!?:;\"'()[]{}।" }
+            val cleanWord = rawWord.trim { it in ",.!?:;\"'()[]{}।॥" }
             val prefix = rawWord.takeWhile { it in ",.!?:;\"'()[]{}" }
             val suffix = rawWord.takeLastWhile { it in ",.!?:;\"'()[]{}" }
 
@@ -175,42 +175,41 @@ object DevanagariTransliterator {
             val n = cleanWord.length
             var i = 0
             while (i < n) {
-                val ch = cleanWord[i]
-
-                // Check 2-char nukta combinations
+                // Check 2-char nukta combinations first
                 if (i + 1 < n) {
                     val twoChar = cleanWord.substring(i, i + 2)
-                    if (twoChar in CONSONANTS) {
+                    if (CONSONANTS.containsKey(twoChar)) {
                         val cons = CONSONANTS[twoChar]!!
                         i += 2
                         handleConsonantFollowing(cleanWord, i, cons, sb)
-                        if (i < n && (cleanWord[i] == '्' || cleanWord[i] in MATRAS)) {
+                        if (i < n && (cleanWord[i] == '्' || MATRAS.containsKey(cleanWord.substring(i, i + 1)))) {
                             i++
                         }
                         continue
                     }
                 }
 
-                if (ch in VOWELS) {
-                    sb.append(VOWELS[ch])
+                val oneChar = cleanWord.substring(i, i + 1)
+                if (VOWELS.containsKey(oneChar)) {
+                    sb.append(VOWELS[oneChar])
                     i++
-                } else if (ch in CONSONANTS) {
-                    val cons = CONSONANTS[ch]!!
+                } else if (CONSONANTS.containsKey(oneChar)) {
+                    val cons = CONSONANTS[oneChar]!!
                     i++
                     handleConsonantFollowing(cleanWord, i, cons, sb)
-                    if (i < n && (cleanWord[i] == '्' || cleanWord[i] in MATRAS)) {
+                    if (i < n && (cleanWord[i] == '्' || MATRAS.containsKey(cleanWord.substring(i, i + 1)))) {
                         i++
                     }
-                } else if (ch in MATRAS) {
-                    sb.append(MATRAS[ch])
+                } else if (MATRAS.containsKey(oneChar)) {
+                    sb.append(MATRAS[oneChar])
                     i++
-                } else if (ch in SPECIAL) {
-                    sb.append(SPECIAL[ch])
+                } else if (SPECIAL.containsKey(oneChar)) {
+                    sb.append(SPECIAL[oneChar])
                     i++
-                } else if (ch == '्') {
+                } else if (oneChar == "्") {
                     i++
                 } else {
-                    sb.append(ch)
+                    sb.append(oneChar)
                     i++
                 }
             }
@@ -220,7 +219,6 @@ object DevanagariTransliterator {
         }
 
         var result = resultWords.joinToString(" ")
-        // Format first letter capitalization
         if (result.isNotEmpty()) {
             result = result.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         }
@@ -230,14 +228,15 @@ object DevanagariTransliterator {
     private fun handleConsonantFollowing(word: String, nextIndex: Int, cons: String, sb: StringBuilder) {
         val n = word.length
         if (nextIndex < n) {
+            val nextOneChar = word.substring(nextIndex, nextIndex + 1)
             val nextCh = word[nextIndex]
             if (nextCh == '्') {
                 // Halant -> no inherent 'a'
                 sb.append(cons)
-            } else if (nextCh in MATRAS) {
-                val matraVal = if (nextCh == 'ा') "a" else MATRAS[nextCh]!!
+            } else if (MATRAS.containsKey(nextOneChar)) {
+                val matraVal = if (nextOneChar == "ा") "a" else (MATRAS[nextOneChar] ?: "")
                 sb.append(cons).append(matraVal)
-            } else if (nextCh in CONSONANTS || nextCh in VOWELS || nextCh in SPECIAL) {
+            } else if (CONSONANTS.containsKey(nextOneChar) || VOWELS.containsKey(nextOneChar) || SPECIAL.containsKey(nextOneChar)) {
                 sb.append(cons).append("a")
             } else {
                 sb.append(cons)
