@@ -368,54 +368,54 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
         )
 
         val scale = w / 108f
-        val strokeW = 6f * scale
+        val strokeW = 5f * scale
 
-        // 6 Soundwave Frequency Bars
+        // 6 Soundwave Frequency Bars with Generous Breathing Room
         // Bar 1 (Left Short)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(24f * scale, 44f * scale),
-            end = androidx.compose.ui.geometry.Offset(24f * scale, 64f * scale),
+            start = androidx.compose.ui.geometry.Offset(34f * scale, 47f * scale),
+            end = androidx.compose.ui.geometry.Offset(34f * scale, 61f * scale),
             strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
         // Bar 2 (Medium-Tall)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(36f * scale, 30f * scale),
-            end = androidx.compose.ui.geometry.Offset(36f * scale, 78f * scale),
+            start = androidx.compose.ui.geometry.Offset(42f * scale, 38f * scale),
+            end = androidx.compose.ui.geometry.Offset(42f * scale, 70f * scale),
             strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
         // Bar 3 (Tallest Peak)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(48f * scale, 20f * scale),
-            end = androidx.compose.ui.geometry.Offset(48f * scale, 88f * scale),
+            start = androidx.compose.ui.geometry.Offset(50f * scale, 31f * scale),
+            end = androidx.compose.ui.geometry.Offset(50f * scale, 77f * scale),
             strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
         // Bar 4 (Center-Right Medium)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(60f * scale, 36f * scale),
-            end = androidx.compose.ui.geometry.Offset(60f * scale, 72f * scale),
+            start = androidx.compose.ui.geometry.Offset(58f * scale, 42f * scale),
+            end = androidx.compose.ui.geometry.Offset(58f * scale, 66f * scale),
             strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
         // Bar 5 (Tall)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(72f * scale, 29f * scale),
-            end = androidx.compose.ui.geometry.Offset(72f * scale, 79f * scale),
+            start = androidx.compose.ui.geometry.Offset(66f * scale, 37f * scale),
+            end = androidx.compose.ui.geometry.Offset(66f * scale, 71f * scale),
             strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
         // Bar 6 (Right Short)
         drawLine(
             color = Color.White,
-            start = androidx.compose.ui.geometry.Offset(84f * scale, 42f * scale),
-            end = androidx.compose.ui.geometry.Offset(84f * scale, 66f * scale),
+            start = androidx.compose.ui.geometry.Offset(74f * scale, 46f * scale),
+            end = androidx.compose.ui.geometry.Offset(74f * scale, 62f * scale),
             strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )

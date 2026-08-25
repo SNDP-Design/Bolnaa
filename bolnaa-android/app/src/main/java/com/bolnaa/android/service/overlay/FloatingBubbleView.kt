@@ -322,23 +322,23 @@ class FloatingBubbleView @JvmOverloads constructor(
         val whiteStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.STROKE
-            strokeWidth = 6f * scale
+            strokeWidth = 5f * scale
             strokeCap = Paint.Cap.ROUND
         }
 
-        // 6 Soundwave Frequency Bars
+        // 6 Soundwave Frequency Bars with Generous Breathing Room
         // Bar 1 (Left Short)
-        canvas.drawLine(24f * scale, 44f * scale, 24f * scale, 64f * scale, whiteStroke)
+        canvas.drawLine(34f * scale, 47f * scale, 34f * scale, 61f * scale, whiteStroke)
         // Bar 2 (Medium-Tall)
-        canvas.drawLine(36f * scale, 30f * scale, 36f * scale, 78f * scale, whiteStroke)
+        canvas.drawLine(42f * scale, 38f * scale, 42f * scale, 70f * scale, whiteStroke)
         // Bar 3 (Tallest Peak)
-        canvas.drawLine(48f * scale, 20f * scale, 48f * scale, 88f * scale, whiteStroke)
+        canvas.drawLine(50f * scale, 31f * scale, 50f * scale, 77f * scale, whiteStroke)
         // Bar 4 (Center-Right Medium)
-        canvas.drawLine(60f * scale, 36f * scale, 60f * scale, 72f * scale, whiteStroke)
+        canvas.drawLine(58f * scale, 42f * scale, 58f * scale, 66f * scale, whiteStroke)
         // Bar 5 (Tall)
-        canvas.drawLine(72f * scale, 29f * scale, 72f * scale, 79f * scale, whiteStroke)
+        canvas.drawLine(66f * scale, 37f * scale, 66f * scale, 71f * scale, whiteStroke)
         // Bar 6 (Right Short)
-        canvas.drawLine(84f * scale, 42f * scale, 84f * scale, 66f * scale, whiteStroke)
+        canvas.drawLine(74f * scale, 46f * scale, 74f * scale, 62f * scale, whiteStroke)
     }
 
     private fun drawListeningState(canvas: Canvas, w: Float, h: Float) {
