@@ -248,7 +248,14 @@ fun DashboardScreen(
                     Switch(
                         checked = isAiCleanupEnabled,
                         onCheckedChange = { coroutineScope.launch { preferencesManager.setAiCleanupEnabled(it) } },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.Black,
+                            checkedTrackColor = Color.White,
+                            checkedBorderColor = Color.White,
+                            uncheckedThumbColor = Color(0xFFA3A3A3),
+                            uncheckedTrackColor = Color(0xFF1E1E1E),
+                            uncheckedBorderColor = Color(0xFF383838)
+                        )
                     )
                 }
 
@@ -292,7 +299,14 @@ fun DashboardScreen(
                     Switch(
                         checked = isAutoStopSilence,
                         onCheckedChange = { coroutineScope.launch { preferencesManager.setAutoStopSilence(it) } },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.Black,
+                            checkedTrackColor = Color.White,
+                            checkedBorderColor = Color.White,
+                            uncheckedThumbColor = Color(0xFFA3A3A3),
+                            uncheckedTrackColor = Color(0xFF1E1E1E),
+                            uncheckedBorderColor = Color(0xFF383838)
+                        )
                     )
                 }
 
@@ -333,7 +347,14 @@ fun DashboardScreen(
                     Switch(
                         checked = isHapticsEnabled,
                         onCheckedChange = { coroutineScope.launch { preferencesManager.setHapticFeedbackEnabled(it) } },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = FlowPrimary)
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.Black,
+                            checkedTrackColor = Color.White,
+                            checkedBorderColor = Color.White,
+                            uncheckedThumbColor = Color(0xFFA3A3A3),
+                            uncheckedTrackColor = Color(0xFF1E1E1E),
+                            uncheckedBorderColor = Color(0xFF383838)
+                        )
                     )
                 }
             }
