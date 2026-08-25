@@ -56,7 +56,7 @@ fun DashboardScreen(
         preferencesManager.setSttEngine(SttEngine.GROQ)
         preferencesManager.setFlowTone(FlowTone.NATURAL)
         preferencesManager.setAttachToKeyboardEnabled(true)
-        preferencesManager.setBubbleSizeDp(72)
+        preferencesManager.setBubbleSizeDp(64)
         preferencesManager.setFreePlacementEnabled(true)
     }
 
@@ -350,10 +350,10 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
         val h = size.height
         val cornerRadius = h * 0.28f
 
-        // Squircle gradient background
+        // Squircle gradient background (Monochrome Black & Charcoal)
         drawRoundRect(
             brush = Brush.linearGradient(
-                colors = listOf(Color(0xFF3ECF8E), Color(0xFF24B47E), Color(0xFF059669)),
+                colors = listOf(Color(0xFF242424), Color(0xFF141414), Color(0xFF000000)),
                 start = androidx.compose.ui.geometry.Offset(0f, 0f),
                 end = androidx.compose.ui.geometry.Offset(w, h)
             ),
@@ -362,7 +362,7 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
 
         // Subtle glowing border
         drawRoundRect(
-            color = Color(0xFF6EE7B7).copy(alpha = 0.5f),
+            color = Color.White.copy(alpha = 0.25f),
             cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius),
             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2.dp.toPx())
         )

@@ -49,8 +49,8 @@ class FloatingBubbleView @JvmOverloads constructor(
 
     // Dimensions
     private val density = resources.displayMetrics.density
-    private var baseSize = (72 * density).toInt()
-    private var expandedWidth = (168 * density).toInt()
+    private var baseSize = (64 * density).toInt()
+    private var expandedWidth = (150 * density).toInt()
 
     // Paints
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -59,13 +59,13 @@ class FloatingBubbleView @JvmOverloads constructor(
     }
 
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#3ECF8E")
+        color = Color.parseColor("#333333")
         style = Paint.Style.STROKE
-        strokeWidth = 2.5f * density
+        strokeWidth = 2f * density
     }
 
     private val wavePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#3ECF8E")
+        color = Color.WHITE
         style = Paint.Style.FILL
         strokeCap = Paint.Cap.ROUND
     }
@@ -267,27 +267,27 @@ class FloatingBubbleView @JvmOverloads constructor(
         val bgGradient = when (state) {
             DictationState.LISTENING -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#881337"), Color.parseColor("#E11D48")),
+                intArrayOf(Color.parseColor("#3D0C11"), Color.parseColor("#EF4444")),
                 null, Shader.TileMode.CLAMP
             )
             DictationState.PROCESSING -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#064E3B"), Color.parseColor("#3ECF8E")),
+                intArrayOf(Color.parseColor("#262626"), Color.parseColor("#111111")),
                 null, Shader.TileMode.CLAMP
             )
             DictationState.SUCCESS -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#065F46"), Color.parseColor("#3ECF8E")),
+                intArrayOf(Color.parseColor("#242424"), Color.parseColor("#000000")),
                 null, Shader.TileMode.CLAMP
             )
             DictationState.ERROR -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#450A0A"), Color.parseColor("#EF4444")),
+                intArrayOf(Color.parseColor("#3B0D0D"), Color.parseColor("#EF4444")),
                 null, Shader.TileMode.CLAMP
             )
             else -> LinearGradient(
                 0f, 0f, w, h,
-                intArrayOf(Color.parseColor("#3ECF8E"), Color.parseColor("#24B47E"), Color.parseColor("#059669")),
+                intArrayOf(Color.parseColor("#242424"), Color.parseColor("#141414"), Color.parseColor("#000000")),
                 null, Shader.TileMode.CLAMP
             )
         }
@@ -296,10 +296,10 @@ class FloatingBubbleView @JvmOverloads constructor(
 
         when (state) {
             DictationState.LISTENING -> borderPaint.color = Color.parseColor("#FDA4AF")
-            DictationState.PROCESSING -> borderPaint.color = Color.parseColor("#A7F3D0")
-            DictationState.SUCCESS -> borderPaint.color = Color.parseColor("#6EE7B7")
+            DictationState.PROCESSING -> borderPaint.color = Color.parseColor("#A3A3A3")
+            DictationState.SUCCESS -> borderPaint.color = Color.WHITE
             DictationState.ERROR -> borderPaint.color = Color.parseColor("#FCA5A5")
-            else -> borderPaint.color = Color.parseColor("#6EE7B7")
+            else -> borderPaint.color = Color.parseColor("#333333")
         }
 
         val strokeOffset = borderPaint.strokeWidth / 2f
@@ -366,7 +366,7 @@ class FloatingBubbleView @JvmOverloads constructor(
         val cx = w / 2f
         val cy = h / 2f
 
-        textPaint.color = Color.parseColor("#A7F3D0")
+        textPaint.color = Color.WHITE
         canvas.drawText("Flowing...", cx, cy + 4 * density, textPaint)
     }
 
@@ -375,7 +375,7 @@ class FloatingBubbleView @JvmOverloads constructor(
         val cy = h / 2f
 
         val checkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#3ECF8E")
+            color = Color.WHITE
             style = Paint.Style.STROKE
             strokeWidth = 3f * density
             strokeCap = Paint.Cap.ROUND

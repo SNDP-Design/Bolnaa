@@ -96,12 +96,12 @@ fun PermissionCard(
                     onClick = onGrantClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = FlowPrimary,
-                        contentColor = Color.White
+                        contentColor = Color.Black
                     ),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text(text = buttonText, style = MaterialTheme.typography.labelLarge)
+                    Text(text = buttonText, style = MaterialTheme.typography.labelLarge, color = Color.Black)
                 }
             }
         }

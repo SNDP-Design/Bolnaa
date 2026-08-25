@@ -70,7 +70,7 @@ class PreferencesManager(private val context: Context) {
 
     val bubbleSizeDp: Flow<Int> = context.dataStore.data
         .catch { handleException(it) }
-        .map { it[KEY_BUBBLE_SIZE_DP] ?: 72 }
+        .map { it[KEY_BUBBLE_SIZE_DP] ?: 64 }
 
     val bubbleOpacity: Flow<Float> = context.dataStore.data
         .catch { handleException(it) }

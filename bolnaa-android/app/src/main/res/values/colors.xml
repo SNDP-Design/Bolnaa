@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Supabase Dark Theme Palette -->
-    <color name="flow_background">#121212</color>
-    <color name="flow_surface">#1C1C1C</color>
-    <color name="flow_surface_variant">#242424</color>
-    <color name="flow_primary">#3ECF8E</color>
-    <color name="flow_accent">#24B47E</color>
-    <color name="flow_listening">#F43F5E</color>
-    <color name="flow_success">#3ECF8E</color>
+    <!-- Black and White Minimalist Palette -->
+    <color name="flow_background">#000000</color>
+    <color name="flow_surface">#121212</color>
+    <color name="flow_surface_variant">#1C1C1C</color>
+    <color name="flow_primary">#FFFFFF</color>
+    <color name="flow_accent">#A3A3A3</color>
+    <color name="flow_listening">#EF4444</color>
+    <color name="flow_success">#FFFFFF</color>
 </resources>

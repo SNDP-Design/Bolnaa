@@ -5,15 +5,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = FlowPrimary,
-    onPrimary = FlowTextPrimary,
+    onPrimary = Color.Black,
     secondary = FlowSecondary,
-    onSecondary = FlowTextPrimary,
+    onSecondary = Color.Black,
     tertiary = FlowAccent,
     background = FlowBg,
     onBackground = FlowTextPrimary,
@@ -23,7 +24,7 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = FlowTextSecondary,
     outline = FlowBorder,
     error = FlowError,
-    onError = FlowTextPrimary
+    onError = Color.White
 )
 
 @Composable

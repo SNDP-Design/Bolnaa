@@ -215,13 +215,14 @@ fun SetupWizardScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FlowPrimary,
                     disabledContainerColor = FlowSurfaceVariant,
-                    contentColor = Color.White,
+                    contentColor = Color.Black,
                     disabledContentColor = FlowTextMuted
                 )
             ) {
                 Text(
                     text = if (corePermissionsGranted) "All Set! Launch Bolnaa" else "Please Grant Core Permissions Above",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (corePermissionsGranted) Color.Black else FlowTextMuted
                 )
             }
 
