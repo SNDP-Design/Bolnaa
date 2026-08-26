@@ -108,72 +108,16 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // --- Permanent Permissions & 100% Reliability Status Card ---
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .clickable { onOpenSetupWizard() }
-                .border(
-                    width = 1.dp,
-                    color = if (totalConfigured < 5) FlowWarning.copy(alpha = 0.5f) else FlowBorder,
-                    shape = RoundedCornerShape(16.dp)
-                ),
-            color = FlowSurfaceVariant
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = if (totalConfigured < 5) Icons.Default.Warning else Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = if (totalConfigured < 5) FlowWarning else FlowPrimary,
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = if (totalConfigured < 5) "Permissions & Reliability" else "100% Uninterrupted Active",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (totalConfigured < 5) FlowWarning else FlowTextPrimary
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (totalConfigured < 5) FlowWarning.copy(alpha = 0.2f) else FlowPrimary.copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                text = "$totalConfigured/5 Setup",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (totalConfigured < 5) FlowWarning else FlowPrimary,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = if (!corePermissionsGranted) {
-                            "Grant core permissions (Mic, Overlay, Accessibility) to enable voice dictation."
-                        } else if (totalConfigured < 5) {
-                            "Core active! Tap to enable Autostart & Battery Saver so Bolnaa stays alive in background."
-                        } else {
-                            "All 5 permissions & background protections configured. Tap to review."
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = FlowTextSecondary
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = FlowTextMuted
-                )
-            }
+        if (totalConfigured < 5) {
+            PermissionsIncompleteCard(
+                totalConfigured = totalConfigured,
+                corePermissionsGranted = corePermissionsGranted,
+                onOpenSetupWizard = onOpenSetupWizard
+            )
+        } else {
+            PermissionsActiveCard(
+                onOpenSetupWizard = onOpenSetupWizard
+            )
         }
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -476,5 +420,332 @@ fun BolnaaLogoIcon(modifier: Modifier = Modifier.size(46.dp)) {
             strokeWidth = strokeW,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
+    }
+}
+
+@Composable
+private fun PermissionsIncompleteCard(
+    totalConfigured: Int,
+    corePermissionsGranted: Boolean,
+    onOpenSetupWizard: () -> Unit
+) {
+    val progress = (totalConfigured.toFloat() / 5f).coerceIn(0f, 1f)
+    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = progress,
+        label = "perm_progress"
+    )
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable { onOpenSetupWizard() }
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(20.dp)
+            ),
+        color = Color(0xFF141414)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+        ) {
+            // Top Row: Icon + Title + Pill Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Squircle Icon Container
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(Color(0xFF222222), RoundedCornerShape(12.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shield,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "SYSTEM RELIABILITY",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF888888),
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (!corePermissionsGranted) "Permissions Required" else "Setup Autostart & Battery",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Status Badge
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFF242424),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(Color.White, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "$totalConfigured/5 Done",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Linear Progress Bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFF262626))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(animatedProgress)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color.White)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Subtitle Description
+            Text(
+                text = if (!corePermissionsGranted) {
+                    "Grant Microphone, Overlay & Accessibility to activate instant voice typing."
+                } else {
+                    "Enable Autostart & disable Battery Saver to prevent Xiaomi from killing Bolnaa overnight."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFFA3A3A3),
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Action Button
+            Button(
+                onClick = onOpenSetupWizard,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(42.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
+            ) {
+                Text(
+                    text = "Complete Setup ($totalConfigured of 5) →",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionsActiveCard(
+    onOpenSetupWizard: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable { onOpenSetupWizard() }
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(20.dp)
+            ),
+        color = Color(0xFF141414)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+        ) {
+            // Top Row: Verified Icon + Title + 5/5 Active Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Squircle Icon Container
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(Color(0xFF1E1E1E), RoundedCornerShape(12.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "SYSTEM STATUS",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF888888),
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "100% Uninterrupted Active",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // 5/5 Active Badge
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFF222222),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.25f))
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "5/5 Active",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 3 Minimalist Capability Chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatusFeatureChip(text = "Overlay", modifier = Modifier.weight(1f))
+                StatusFeatureChip(text = "Auto-Paste", modifier = Modifier.weight(1f))
+                StatusFeatureChip(text = "Autostart", modifier = Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            HorizontalDivider(color = Color(0xFF242424), thickness = 1.dp)
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Footer row: status text + Manage link
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Shielded against background sweeps & sleep",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF737373)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Manage",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatusFeatureChip(text: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = Color(0xFF1C1C1C),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2A2A2A))
+    ) {
+        Row(
+            modifier = Modifier.padding(vertical = 6.dp, horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(11.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFFCCCCCC),
+                maxLines = 1
+            )
+        }
     }
 }
