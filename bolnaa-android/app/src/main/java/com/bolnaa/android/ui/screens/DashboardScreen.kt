@@ -36,6 +36,8 @@ fun DashboardScreen(
     isOverlayPermissionGranted: Boolean,
     isAccessibilityPermissionGranted: Boolean,
     isMicPermissionGranted: Boolean,
+    isBatteryOptimizationExempt: Boolean,
+    isAutostartConfigured: Boolean,
     onOpenSetupWizard: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -46,7 +48,7 @@ fun DashboardScreen(
     val isAiCleanupEnabled by preferencesManager.isAiCleanupEnabled.collectAsState(initial = true)
     val isAutoStopSilence by preferencesManager.isAutoStopSilence.collectAsState(initial = true)
     val silenceTimeoutMs by preferencesManager.silenceTimeoutMs.collectAsState(initial = 1600)
-    val bubbleSizeDp by preferencesManager.bubbleSizeDp.collectAsState(initial = 58)
+    val bubbleSizeDp by preferencesManager.bubbleSizeDp.collectAsState(initial = 64)
     val isFreePlacement by preferencesManager.isFreePlacementEnabled.collectAsState(initial = true)
     val isHapticsEnabled by preferencesManager.isHapticFeedbackEnabled.collectAsState(initial = true)
     val customVocab by preferencesManager.customVocabulary.collectAsState(initial = "")
@@ -65,7 +67,14 @@ fun DashboardScreen(
     var isGroqKeyVisible by remember { mutableStateOf(false) }
     var customVocabInput by remember(customVocab) { mutableStateOf(customVocab) }
 
-    val allPermissionsGranted = isOverlayPermissionGranted && isAccessibilityPermissionGranted && isMicPermissionGranted
+    val corePermissionsGranted = isOverlayPermissionGranted && isAccessibilityPermissionGranted && isMicPermissionGranted
+    val totalConfigured = listOf(
+        isMicPermissionGranted,
+        isOverlayPermissionGranted,
+        isAccessibilityPermissionGranted,
+        isAutostartConfigured,
+        isBatteryOptimizationExempt
+    ).count { it }
 
     Column(
         modifier = Modifier
@@ -98,48 +107,75 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // --- Permissions Warning (if any missing) ---
-        if (!allPermissionsGranted) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onOpenSetupWizard() }
-                    .border(1.dp, FlowWarning.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
-                color = FlowSurfaceVariant
+        // --- Permanent Permissions & 100% Reliability Status Card ---
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onOpenSetupWizard() }
+                .border(
+                    width = 1.dp,
+                    color = if (totalConfigured < 5) FlowWarning.copy(alpha = 0.5f) else FlowBorder,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            color = FlowSurfaceVariant
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = FlowWarning,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
+                Icon(
+                    imageVector = if (totalConfigured < 5) Icons.Default.Warning else Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = if (totalConfigured < 5) FlowWarning else FlowPrimary,
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
-                            text = "Permissions Required",
+                            text = if (totalConfigured < 5) "Permissions & Reliability" else "100% Uninterrupted Active",
                             style = MaterialTheme.typography.titleMedium,
-                            color = FlowWarning
+                            color = if (totalConfigured < 5) FlowWarning else FlowTextPrimary
                         )
-                        Text(
-                            text = "Tap to grant Overlay & Accessibility permissions for auto-paste.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = FlowTextSecondary
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (totalConfigured < 5) FlowWarning.copy(alpha = 0.2f) else FlowPrimary.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "$totalConfigured/5 Setup",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (totalConfigured < 5) FlowWarning else FlowPrimary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = FlowTextMuted
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (!corePermissionsGranted) {
+                            "Grant core permissions (Mic, Overlay, Accessibility) to enable voice dictation."
+                        } else if (totalConfigured < 5) {
+                            "Core active! Tap to enable Autostart & Battery Saver so Bolnaa stays alive in background."
+                        } else {
+                            "All 5 permissions & background protections configured. Tap to review."
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = FlowTextSecondary
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = FlowTextMuted
+                )
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
+        Spacer(modifier = Modifier.height(20.dp))
 
         // ==========================================
         // 1. GROQ WHISPER API KEY

@@ -32,7 +32,17 @@ class PreferencesManager(private val context: Context) {
         private val KEY_BUBBLE_POS_X = intPreferencesKey("bubble_pos_x")
         private val KEY_BUBBLE_POS_Y = intPreferencesKey("bubble_pos_y")
         private val KEY_FREE_PLACEMENT = booleanPreferencesKey("free_placement")
+        private val KEY_SETUP_COMPLETED = booleanPreferencesKey("setup_completed")
+        private val KEY_AUTOSTART_CONFIGURED = booleanPreferencesKey("autostart_configured")
     }
+
+    val isSetupCompleted: Flow<Boolean> = context.dataStore.data
+        .catch { handleException(it) }
+        .map { it[KEY_SETUP_COMPLETED] ?: false }
+
+    val isAutostartConfigured: Flow<Boolean> = context.dataStore.data
+        .catch { handleException(it) }
+        .map { it[KEY_AUTOSTART_CONFIGURED] ?: false }
 
     val groqApiKey: Flow<String> = context.dataStore.data
         .catch { handleException(it) }
@@ -165,6 +175,14 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun setServiceActive(active: Boolean) {
         context.dataStore.edit { it[KEY_SERVICE_ACTIVE] = active }
+    }
+
+    suspend fun setSetupCompleted(completed: Boolean) {
+        context.dataStore.edit { it[KEY_SETUP_COMPLETED] = completed }
+    }
+
+    suspend fun setAutostartConfigured(configured: Boolean) {
+        context.dataStore.edit { it[KEY_AUTOSTART_CONFIGURED] = configured }
     }
 
     private fun handleException(throwable: Throwable) {

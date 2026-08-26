@@ -19,8 +19,10 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.service.FlowAccessibilityService
 import com.bolnaa.android.service.FlowOverlayService
@@ -28,6 +30,7 @@ import com.bolnaa.android.ui.screens.DashboardScreen
 import com.bolnaa.android.ui.screens.SetupWizardScreen
 import com.bolnaa.android.ui.theme.FlowBg
 import com.bolnaa.android.ui.theme.BolnaaTheme
+import kotlinx.coroutines.launch
 
 enum class Screen {
     DASHBOARD,
@@ -64,6 +67,11 @@ class MainActivity : ComponentActivity() {
             BolnaaTheme {
                 val updateManager = remember { com.bolnaa.android.updater.AppUpdateManager(this@MainActivity) }
                 val updateStatus by updateManager.updateStatus.collectAsState()
+                val isSetupCompleted by preferencesManager.isSetupCompleted.collectAsState(initial = true)
+                val isAutostartConfiguredPref by preferencesManager.isAutostartConfigured.collectAsState(initial = false)
+                val coroutineScope = rememberCoroutineScope()
+
+                val isAutostartEffective = hasAutostartVisited || isAutostartConfiguredPref
 
                 LaunchedEffect(Unit) {
                     updateManager.checkForUpdates()
@@ -73,7 +81,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = FlowBg
                 ) {
-                    var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
+                    val initialScreen = if (!isSetupCompleted && (!hasOverlayPermission || !hasAccessibilityPermission || !hasMicPermission)) {
+                        Screen.SETUP_WIZARD
+                    } else {
+                        Screen.DASHBOARD
+                    }
+
+                    var currentScreen by rememberSaveable { mutableStateOf(initialScreen) }
 
                     AnimatedContent(
                         targetState = currentScreen,
@@ -89,6 +103,8 @@ class MainActivity : ComponentActivity() {
                                     isOverlayPermissionGranted = hasOverlayPermission,
                                     isAccessibilityPermissionGranted = hasAccessibilityPermission,
                                     isMicPermissionGranted = hasMicPermission,
+                                    isBatteryOptimizationExempt = hasBatteryOptimizationExempt,
+                                    isAutostartConfigured = isAutostartEffective,
                                     onOpenSetupWizard = { currentScreen = Screen.SETUP_WIZARD }
                                 )
                             }
@@ -98,7 +114,7 @@ class MainActivity : ComponentActivity() {
                                     isAccessibilityPermissionGranted = hasAccessibilityPermission,
                                     isMicPermissionGranted = hasMicPermission,
                                     isBatteryOptimizationExempt = hasBatteryOptimizationExempt,
-                                    isAutostartConfigured = hasAutostartVisited,
+                                    isAutostartConfigured = isAutostartEffective,
                                     onRequestMicPermission = { requestMicPermission() },
                                     onRequestOverlayPermission = { requestOverlayPermission() },
                                     onRequestAccessibilityPermission = { requestAccessibilityPermission() },
@@ -106,6 +122,9 @@ class MainActivity : ComponentActivity() {
                                     onOpenAutostartSettings = { openAutostartSettings() },
                                     onBack = { currentScreen = Screen.DASHBOARD },
                                     onFinish = {
+                                        coroutineScope.launch {
+                                            preferencesManager.setSetupCompleted(true)
+                                        }
                                         startOverlayService()
                                         currentScreen = Screen.DASHBOARD
                                     }
@@ -193,6 +212,9 @@ class MainActivity : ComponentActivity() {
 
     private fun openAutostartSettings() {
         hasAutostartVisited = true
+        lifecycleScope.launch {
+            preferencesManager.setAutostartConfigured(true)
+        }
         val intentList = listOf(
             // Xiaomi / MIUI / HyperOS
             Intent().setComponent(ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")),
