@@ -29,6 +29,7 @@ class PreferencesManager(private val context: Context) {
         private val KEY_ATTACH_TO_KEYBOARD = booleanPreferencesKey("attach_to_keyboard")
         private val KEY_CUSTOM_VOCABULARY = stringPreferencesKey("custom_vocabulary")
         private val KEY_SERVICE_ACTIVE = booleanPreferencesKey("service_active")
+        private val KEY_AUTO_PAUSE_FINANCIAL_APPS = booleanPreferencesKey("auto_pause_financial_apps")
         private val KEY_BUBBLE_POS_X = intPreferencesKey("bubble_pos_x")
         private val KEY_BUBBLE_POS_Y = intPreferencesKey("bubble_pos_y")
         private val KEY_FREE_PLACEMENT = booleanPreferencesKey("free_placement")
@@ -43,6 +44,10 @@ class PreferencesManager(private val context: Context) {
     val isAutostartConfigured: Flow<Boolean> = context.dataStore.data
         .catch { handleException(it) }
         .map { it[KEY_AUTOSTART_CONFIGURED] ?: false }
+
+    val isAutoPauseFinancialApps: Flow<Boolean> = context.dataStore.data
+        .catch { handleException(it) }
+        .map { it[KEY_AUTO_PAUSE_FINANCIAL_APPS] ?: true }
 
     val groqApiKey: Flow<String> = context.dataStore.data
         .catch { handleException(it) }
@@ -112,7 +117,7 @@ class PreferencesManager(private val context: Context) {
 
     val isServiceActive: Flow<Boolean> = context.dataStore.data
         .catch { handleException(it) }
-        .map { it[KEY_SERVICE_ACTIVE] ?: false }
+        .map { it[KEY_SERVICE_ACTIVE] ?: true }
 
     suspend fun setBubblePosition(x: Int, y: Int) {
         context.dataStore.edit {
@@ -175,6 +180,10 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun setServiceActive(active: Boolean) {
         context.dataStore.edit { it[KEY_SERVICE_ACTIVE] = active }
+    }
+
+    suspend fun setAutoPauseFinancialApps(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_AUTO_PAUSE_FINANCIAL_APPS] = enabled }
     }
 
     suspend fun setSetupCompleted(completed: Boolean) {

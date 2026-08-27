@@ -13,9 +13,12 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import com.bolnaa.android.data.PreferencesManager
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import java.lang.ref.WeakReference
 
 class FlowAccessibilityService : AccessibilityService() {
@@ -34,15 +37,67 @@ class FlowAccessibilityService : AccessibilityService() {
 
         private val _keyboardTopYFlow = MutableStateFlow<Int?>(null)
         val keyboardTopYFlow: StateFlow<Int?> = _keyboardTopYFlow.asStateFlow()
+
+        // Known UPI, Payment & Banking package identifiers in India / Global
+        private val FINANCIAL_PACKAGES = setOf(
+            "com.google.android.apps.nbu.paisa.user", // Google Pay
+            "com.phonepe.app",                        // PhonePe
+            "net.one97.paytm",                        // Paytm
+            "in.org.npci.upiapp",                     // BHIM UPI
+            "com.sbi.lotusintouch",                   // YONO SBI
+            "com.sbi.SBIFreedomPlus",                 // YONO Lite SBI
+            "com.snapwork.hdfc",                      // HDFC MobileBanking
+            "com.hdfcbank.payzapp",                   // HDFC PayZapp
+            "com.csam.icici.bank.imobile",            // ICICI iMobile Pay
+            "com.axis.mobile",                        // Axis Mobile
+            "com.kotak.omni",                         // Kotak 811
+            "com.dreamplug.androidapp",               // CRED
+            "com.finopaytech.bpay",                   // BPay
+            "com.msf.kbank.mobile",                   // KBank
+            "com.zerodha.kite3",                      // Zerodha Kite
+            "com.groww",                              // Groww
+            "com.angelprime",                         // Angel One
+            "com.mobikwik_new",                       // MobiKwik
+            "com.freecharge.android"                  // Freecharge
+        )
+
+        fun isFinancialApp(packageName: String?): Boolean {
+            if (packageName.isNullOrBlank()) return false
+            val pkg = packageName.lowercase()
+            if (FINANCIAL_PACKAGES.contains(pkg)) return true
+            return (pkg.contains("bank") || pkg.contains("upi") || pkg.contains("paytm") ||
+                    pkg.contains("phonepe") || pkg.contains("paisa") || pkg.contains("wallet") ||
+                    pkg.contains(".payment") || pkg.contains("yono")) &&
+                    !pkg.contains("com.bolnaa")
+        }
     }
 
+    private lateinit var preferencesManager: PreferencesManager
+    private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var isServiceActive = true
+    private var isAutoPauseFinancialApps = true
     private var currentFocusedNode: AccessibilityNodeInfo? = null
     private var lastFocusedPackage: CharSequence? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         instanceRef = WeakReference(this)
+        preferencesManager = PreferencesManager(this)
         Log.d(TAG, "FlowAccessibilityService connected")
+
+        serviceScope.launch {
+            preferencesManager.isServiceActive.collect { active ->
+                isServiceActive = active
+                if (active) {
+                    ensureOverlayServiceRunning()
+                }
+            }
+        }
+        serviceScope.launch {
+            preferencesManager.isAutoPauseFinancialApps.collect { autoPause ->
+                isAutoPauseFinancialApps = autoPause
+            }
+        }
 
         val info = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPE_VIEW_FOCUSED or
@@ -57,12 +112,26 @@ class FlowAccessibilityService : AccessibilityService() {
             notificationTimeout = 50
         }
         serviceInfo = info
-        ensureOverlayServiceRunning()
+        if (isServiceActive) {
+            ensureOverlayServiceRunning()
+        }
         checkKeyboardAndFocusState()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
+
+        val pkgName = event.packageName?.toString()
+        if (pkgName != null) {
+            val isFinancial = isFinancialApp(pkgName)
+            if (isAutoPauseFinancialApps) {
+                FlowOverlayService.setFinancialAppActive(isFinancial)
+            }
+        }
+
+        if (!isServiceActive) {
+            return
+        }
 
         when (event.eventType) {
             AccessibilityEvent.TYPE_VIEW_FOCUSED,
@@ -85,6 +154,7 @@ class FlowAccessibilityService : AccessibilityService() {
     }
 
     private fun ensureOverlayServiceRunning() {
+        if (!isServiceActive) return
         try {
             if (!FlowOverlayService.isRunning && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this))) {
                 Log.d(TAG, "Ensuring FlowOverlayService is running from AccessibilityService")
@@ -234,6 +304,7 @@ class FlowAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        serviceScope.cancel()
         instanceRef = null
         currentFocusedNode = null
         _isKeyboardVisibleFlow.value = false

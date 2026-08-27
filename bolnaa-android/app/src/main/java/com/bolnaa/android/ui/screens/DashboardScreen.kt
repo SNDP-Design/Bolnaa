@@ -38,12 +38,16 @@ fun DashboardScreen(
     isMicPermissionGranted: Boolean,
     isBatteryOptimizationExempt: Boolean,
     isAutostartConfigured: Boolean,
-    onOpenSetupWizard: () -> Unit
+    onOpenSetupWizard: () -> Unit,
+    onStartService: () -> Unit = {},
+    onStopService: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
     // Preferences state
+    val isServiceActive by preferencesManager.isServiceActive.collectAsState(initial = true)
+    val isAutoPauseFinancialApps by preferencesManager.isAutoPauseFinancialApps.collectAsState(initial = true)
     val groqKey by preferencesManager.groqApiKey.collectAsState(initial = "")
     val isAiCleanupEnabled by preferencesManager.isAiCleanupEnabled.collectAsState(initial = true)
     val isAutoStopSilence by preferencesManager.isAutoStopSilence.collectAsState(initial = true)
@@ -105,7 +109,24 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // --- Master Pause / Active Switch for Financial Apps ---
+        MasterServiceSwitchCard(
+            isServiceActive = isServiceActive,
+            onToggle = { active ->
+                coroutineScope.launch {
+                    preferencesManager.setServiceActive(active)
+                }
+                if (active) {
+                    onStartService()
+                } else {
+                    onStopService()
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // --- Permanent Permissions & 100% Reliability Status Card ---
         if (totalConfigured < 5) {
@@ -327,6 +348,32 @@ fun DashboardScreen(
                     Switch(
                         checked = isHapticsEnabled,
                         onCheckedChange = { coroutineScope.launch { preferencesManager.setHapticFeedbackEnabled(it) } },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.Black,
+                            checkedTrackColor = Color.White,
+                            checkedBorderColor = Color.White,
+                            uncheckedThumbColor = Color(0xFFA3A3A3),
+                            uncheckedTrackColor = Color(0xFF1E1E1E),
+                            uncheckedBorderColor = Color(0xFF383838)
+                        )
+                    )
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
+
+                // Auto-Pause in Banking & UPI Apps toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Auto-Pause in Banking & UPI Apps", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
+                        Text("Hides bubble overlay when Google Pay, PhonePe, Paytm, or bank apps open", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                    }
+                    Switch(
+                        checked = isAutoPauseFinancialApps,
+                        onCheckedChange = { coroutineScope.launch { preferencesManager.setAutoPauseFinancialApps(it) } },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.Black,
                             checkedTrackColor = Color.White,
@@ -749,3 +796,104 @@ private fun StatusFeatureChip(text: String, modifier: Modifier = Modifier) {
         }
     }
 }
+
+@Composable
+private fun MasterServiceSwitchCard(
+    isServiceActive: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .border(
+                width = 1.dp,
+                color = if (isServiceActive) Color.White.copy(alpha = 0.25f) else Color(0xFFEAB308).copy(alpha = 0.4f),
+                shape = RoundedCornerShape(20.dp)
+            ),
+        color = if (isServiceActive) Color(0xFF141414) else Color(0xFF1A1710)
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(
+                            if (isServiceActive) Color(0xFF222222) else Color(0xFF2C2410),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .border(
+                            1.dp,
+                            if (isServiceActive) Color.White.copy(alpha = 0.2f) else Color(0xFFEAB308).copy(alpha = 0.3f),
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isServiceActive) Icons.Default.Mic else Icons.Default.Pause,
+                        contentDescription = null,
+                        tint = if (isServiceActive) Color.White else Color(0xFFFBBF24),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(if (isServiceActive) Color(0xFF22C55E) else Color(0xFFEAB308), CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isServiceActive) "ACTIVE" else "PAUSED (FINANCIAL SAFE)",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isServiceActive) Color(0xFF22C55E) else Color(0xFFEAB308),
+                            letterSpacing = 1.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (isServiceActive) "Voice Dictation Enabled" else "Safe for Financial Apps",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Switch(
+                    checked = isServiceActive,
+                    onCheckedChange = onToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.Black,
+                        checkedTrackColor = Color.White,
+                        checkedBorderColor = Color.White,
+                        uncheckedThumbColor = Color(0xFFA3A3A3),
+                        uncheckedTrackColor = Color(0xFF1E1E1E),
+                        uncheckedBorderColor = Color(0xFF383838)
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = if (isServiceActive) {
+                    "Bolnaa is active. Toggle OFF to pause and open Google Pay, PhonePe, or Banking apps with zero security popups."
+                } else {
+                    "Bolnaa is paused and overlays are hidden. Toggle back ON whenever you want to voice type without re-granting permissions."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFA3A3A3),
+                lineHeight = 18.sp
+            )
+        }
+    }
+}
+

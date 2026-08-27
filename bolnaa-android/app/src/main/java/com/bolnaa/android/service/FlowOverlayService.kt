@@ -33,6 +33,13 @@ class FlowOverlayService : Service() {
         var isRunning = false
             private set
 
+        private val _isFinancialAppInForegroundFlow = kotlinx.coroutines.flow.MutableStateFlow(false)
+        val isFinancialAppInForegroundFlow = _isFinancialAppInForegroundFlow.kotlinx.coroutines.flow.asStateFlow()
+
+        fun setFinancialAppActive(isActive: Boolean) {
+            _isFinancialAppInForegroundFlow.value = isActive
+        }
+
         fun start(context: Context) {
             try {
                 val intent = Intent(context, FlowOverlayService::class.java)
@@ -215,8 +222,30 @@ class FlowOverlayService : Service() {
     }
 
     private var isKeyboardOnlyMode = true
+    private var isServiceActive = true
+    private var isFinancialAppInForeground = false
+    private var isAutoPauseFinancialApps = true
 
     private fun observePreferences() {
+        serviceScope.launch {
+            preferencesManager.isServiceActive.collect { active ->
+                isServiceActive = active
+                updateNotification(active)
+                updateBubbleVisibility(FlowAccessibilityService.isKeyboardVisibleFlow.value)
+            }
+        }
+        serviceScope.launch {
+            preferencesManager.isAutoPauseFinancialApps.collect { autoPause ->
+                isAutoPauseFinancialApps = autoPause
+                updateBubbleVisibility(FlowAccessibilityService.isKeyboardVisibleFlow.value)
+            }
+        }
+        serviceScope.launch {
+            isFinancialAppInForegroundFlow.collect { inForeground ->
+                isFinancialAppInForeground = inForeground
+                updateBubbleVisibility(FlowAccessibilityService.isKeyboardVisibleFlow.value)
+            }
+        }
         serviceScope.launch {
             preferencesManager.silenceTimeoutMs.collect { timeout ->
                 audioRecorder.silenceTimeoutMs = timeout.toLong()
@@ -273,8 +302,42 @@ class FlowOverlayService : Service() {
         }
     }
 
+    private fun updateNotification(active: Boolean) {
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val desc = if (active) {
+            getString(R.string.service_running_desc)
+        } else {
+            "Paused (Safe for Financial Apps)"
+        }
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(R.string.service_running_title))
+            .setContentText(desc)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
+
+        notificationManager?.notify(NOTIFICATION_ID, notification)
+    }
+
     private fun updateBubbleVisibility(isKeyboardOpen: Boolean) {
         val bubble = bubbleView ?: return
+
+        // If master switch is OFF or we're inside a financial app with auto-pause ON:
+        if (!isServiceActive || (isAutoPauseFinancialApps && isFinancialAppInForeground)) {
+            bubble.hideAnimated()
+            return
+        }
+
         if (!isKeyboardOnlyMode) {
             bubble.showAnimated()
             return

@@ -32,6 +32,8 @@ import com.bolnaa.android.ui.theme.FlowBg
 import com.bolnaa.android.ui.theme.BolnaaTheme
 import kotlinx.coroutines.launch
 
+import kotlinx.coroutines.flow.first
+
 enum class Screen {
     DASHBOARD,
     SETUP_WIZARD
@@ -105,7 +107,9 @@ class MainActivity : ComponentActivity() {
                                     isMicPermissionGranted = hasMicPermission,
                                     isBatteryOptimizationExempt = hasBatteryOptimizationExempt,
                                     isAutostartConfigured = isAutostartEffective,
-                                    onOpenSetupWizard = { currentScreen = Screen.SETUP_WIZARD }
+                                    onOpenSetupWizard = { currentScreen = Screen.SETUP_WIZARD },
+                                    onStartService = { startOverlayService() },
+                                    onStopService = { stopOverlayService() }
                                 )
                             }
                             Screen.SETUP_WIZARD -> {
@@ -124,6 +128,7 @@ class MainActivity : ComponentActivity() {
                                     onFinish = {
                                         coroutineScope.launch {
                                             preferencesManager.setSetupCompleted(true)
+                                            preferencesManager.setServiceActive(true)
                                         }
                                         startOverlayService()
                                         currentScreen = Screen.DASHBOARD
@@ -140,8 +145,11 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         updatePermissionStates()
-        if (hasOverlayPermission && hasMicPermission && hasAccessibilityPermission && !isOverlayRunning) {
-            startOverlayService()
+        lifecycleScope.launch {
+            val isServiceActive = preferencesManager.isServiceActive.first()
+            if (isServiceActive && hasOverlayPermission && hasMicPermission && hasAccessibilityPermission && !isOverlayRunning) {
+                startOverlayService()
+            }
         }
     }
 
