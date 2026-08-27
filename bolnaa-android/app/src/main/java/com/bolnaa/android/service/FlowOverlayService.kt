@@ -21,6 +21,9 @@ import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.data.models.DictationState
 import com.bolnaa.android.service.overlay.FloatingBubbleView
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 
 class FlowOverlayService : Service() {
@@ -33,8 +36,8 @@ class FlowOverlayService : Service() {
         var isRunning = false
             private set
 
-        private val _isFinancialAppInForegroundFlow = kotlinx.coroutines.flow.MutableStateFlow(false)
-        val isFinancialAppInForegroundFlow = _isFinancialAppInForegroundFlow.kotlinx.coroutines.flow.asStateFlow()
+        private val _isFinancialAppInForegroundFlow = MutableStateFlow(false)
+        val isFinancialAppInForegroundFlow: StateFlow<Boolean> = _isFinancialAppInForegroundFlow.asStateFlow()
 
         fun setFinancialAppActive(isActive: Boolean) {
             _isFinancialAppInForegroundFlow.value = isActive
