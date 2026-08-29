@@ -38,6 +38,9 @@ class BolnaaTileService : TileService() {
 
             if (newActive) {
                 FlowOverlayService.start(this@BolnaaTileService)
+            } else {
+                FlowOverlayService.stop(this@BolnaaTileService)
+                FlowAccessibilityService.disableService()
             }
         }
     }

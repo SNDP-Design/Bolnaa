@@ -276,6 +276,10 @@ class MainActivity : ComponentActivity() {
             requestMicPermission()
             return
         }
+        if (!hasAccessibilityPermission) {
+            requestAccessibilityPermission()
+            return
+        }
 
         FlowOverlayService.start(this)
         isOverlayRunning = true
@@ -284,6 +288,7 @@ class MainActivity : ComponentActivity() {
     private fun stopOverlayService() {
         FlowOverlayService.stop(this)
         isOverlayRunning = false
+        FlowAccessibilityService.disableService()
     }
 
     private fun isAccessibilityServiceEnabled(context: Context, serviceClass: Class<*>): Boolean {

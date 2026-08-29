@@ -70,6 +70,17 @@ class FlowAccessibilityService : AccessibilityService() {
                     pkg.contains(".payment") || pkg.contains("yono")) &&
                     !pkg.contains("com.bolnaa")
         }
+
+        fun disableService() {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    instanceRef?.get()?.disableSelf()
+                    Log.d(TAG, "FlowAccessibilityService disableSelf called successfully")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to disableSelf", e)
+            }
+        }
     }
 
     private lateinit var preferencesManager: PreferencesManager
@@ -90,6 +101,15 @@ class FlowAccessibilityService : AccessibilityService() {
                 isServiceActive = active
                 if (active) {
                     ensureOverlayServiceRunning()
+                } else {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            disableSelf()
+                            Log.d(TAG, "FlowAccessibilityService auto-disabled via disableSelf for financial mode")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to disableSelf on active false", e)
+                    }
                 }
             }
         }
