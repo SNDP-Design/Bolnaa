@@ -885,9 +885,9 @@ private fun MasterServiceSwitchCard(
 
             Text(
                 text = if (isServiceActive) {
-                    "Bolnaa is active. Toggle OFF to pause and open Google Pay, PhonePe, or Banking apps with zero security popups."
+                    "Bolnaa is fully active. Toggle OFF before opening Google Pay, PhonePe, Paytm, or any banking app to get zero security popups."
                 } else {
-                    "Bolnaa is paused and overlays are hidden. Toggle back ON whenever you want to voice type without re-granting permissions."
+                    "Bolnaa is completely OFF — invisible to all apps. Toggle back ON when you want voice dictation. You'll need to re-enable the Accessibility permission once (Android system prompt)."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFFA3A3A3),

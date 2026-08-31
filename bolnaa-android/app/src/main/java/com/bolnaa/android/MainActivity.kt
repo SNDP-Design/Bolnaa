@@ -277,6 +277,7 @@ class MainActivity : ComponentActivity() {
             return
         }
         if (!hasAccessibilityPermission) {
+            // Accessibility was disabled via disableSelf() — open Settings directly
             requestAccessibilityPermission()
             return
         }
@@ -286,9 +287,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stopOverlayService() {
+        // IMPORTANT: Call disableService() FIRST while the accessibility service is still alive.
+        // Then stop the overlay. This ensures disableSelf() succeeds before the service is gone.
+        FlowAccessibilityService.disableService()
         FlowOverlayService.stop(this)
         isOverlayRunning = false
-        FlowAccessibilityService.disableService()
     }
 
     private fun isAccessibilityServiceEnabled(context: Context, serviceClass: Class<*>): Boolean {

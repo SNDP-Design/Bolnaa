@@ -101,16 +101,10 @@ class FlowAccessibilityService : AccessibilityService() {
                 isServiceActive = active
                 if (active) {
                     ensureOverlayServiceRunning()
-                } else {
-                    try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            disableSelf()
-                            Log.d(TAG, "FlowAccessibilityService auto-disabled via disableSelf for financial mode")
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to disableSelf on active false", e)
-                    }
                 }
+                // Note: disableSelf() is called externally via disableService()
+                // from stopOverlayService() in MainActivity/TileService BEFORE the
+                // preference is saved, to avoid a race condition.
             }
         }
         serviceScope.launch {

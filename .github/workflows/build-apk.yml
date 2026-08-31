@@ -59,13 +59,16 @@ jobs:
           path: build-output/bolnaa.apk
           retention-days: 30
 
-      - name: Delete old release tag if exists
+      - name: Delete existing release and tag (force fresh)
         continue-on-error: true
         run: |
-          git tag -d latest || true
+          gh release delete latest --yes --cleanup-tag || true
           git push origin :refs/tags/latest || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for tag cleanup to propagate
+        run: sleep 5
 
       - name: Publish GitHub Release (Direct Download)
         uses: softprops/action-gh-release@v2
@@ -75,6 +78,7 @@ jobs:
           body: |
             ### 🎙️ Bolnaa Latest Android Build
             - Commit: `${{ github.sha }}`
+            - Built at: `${{ github.run_id }}`
             - **Download Bolnaa APK**: [bolnaa.apk](https://github.com/${{ github.repository }}/releases/download/latest/bolnaa.apk)
             
             #### How to Install on Xiaomi / Redmi / Android:
