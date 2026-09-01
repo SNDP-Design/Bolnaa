@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import android.widget.Toast
 import com.bolnaa.android.data.PreferencesManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,6 +90,7 @@ class FlowAccessibilityService : AccessibilityService() {
     private var isAutoPauseFinancialApps = true
     private var currentFocusedNode: AccessibilityNodeInfo? = null
     private var lastFocusedPackage: CharSequence? = null
+    private var bankingShutdownStarted = false
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -140,6 +142,10 @@ class FlowAccessibilityService : AccessibilityService() {
             val isFinancial = isFinancialApp(pkgName)
             if (isAutoPauseFinancialApps) {
                 FlowOverlayService.setFinancialAppActive(isFinancial)
+                if (isFinancial) {
+                    enterBankingSafeMode()
+                    return
+                }
             }
         }
 
@@ -163,6 +169,26 @@ class FlowAccessibilityService : AccessibilityService() {
             AccessibilityEvent.TYPE_WINDOWS_CHANGED -> {
                 findAndCacheFocusedNode()
                 checkKeyboardAndFocusState()
+            }
+        }
+    }
+
+    private fun enterBankingSafeMode() {
+        if (bankingShutdownStarted) return
+        bankingShutdownStarted = true
+
+        FlowOverlayService.setFinancialAppActive(true)
+        FlowOverlayService.stop(this)
+
+        serviceScope.launch {
+            preferencesManager.setServiceActive(false)
+            Toast.makeText(
+                this@FlowAccessibilityService,
+                "Bolnaa is fully off for secure banking. Close and reopen the banking app if its warning remains.",
+                Toast.LENGTH_LONG
+            ).show()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                disableSelf()
             }
         }
     }

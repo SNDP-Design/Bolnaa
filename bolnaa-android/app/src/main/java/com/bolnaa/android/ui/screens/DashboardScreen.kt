@@ -360,15 +360,15 @@ fun DashboardScreen(
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = FlowBorder)
 
-                // Auto-Pause in Banking & UPI Apps toggle
+                // Full shutdown in Banking & UPI apps
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Auto-Pause in Banking & UPI Apps", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
-                        Text("Hides bubble overlay when Google Pay, PhonePe, Paytm, or bank apps open", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
+                        Text("Banking Safety Shutdown", style = MaterialTheme.typography.titleMedium, color = FlowTextPrimary)
+                        Text("Fully turns Bolnaa off when a recognized banking or payment app opens. Re-enable Bolnaa after payment.", style = MaterialTheme.typography.bodyMedium, color = FlowTextSecondary)
                     }
                     Switch(
                         checked = isAutoPauseFinancialApps,
@@ -884,9 +884,9 @@ private fun MasterServiceSwitchCard(
 
             Text(
                 text = if (isServiceActive) {
-                    "Bolnaa is fully active. Toggle OFF before opening Google Pay, PhonePe, Paytm, or any banking app to get zero security popups."
+                    "For the most reliable payments, turn Bolnaa OFF before opening a banking app. Banking Safety Shutdown will also turn it off when a recognized financial app opens."
                 } else {
-                    "Bolnaa is completely OFF — invisible to all apps. Toggle back ON when you want voice dictation. You'll need to re-enable the Accessibility permission once (Android system prompt)."
+                    "Bolnaa's bubble and Accessibility service are OFF. Turn it back ON after payment and re-enable Accessibility when Android asks."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFFA3A3A3),
