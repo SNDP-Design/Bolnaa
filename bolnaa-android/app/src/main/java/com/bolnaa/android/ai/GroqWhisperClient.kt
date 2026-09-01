@@ -1,6 +1,7 @@
 package com.bolnaa.android.ai
 
 import android.util.Log
+import com.bolnaa.android.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -13,11 +14,11 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class GroqWhisperClient(private val apiKeyProvider: () -> String) {
+class GroqWhisperClient {
 
     companion object {
         private const val TAG = "GroqWhisperClient"
-        private const val GROQ_AUDIO_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
+        private const val BACKEND_AUDIO_URL = BuildConfig.BOLNAA_BACKEND_URL
     }
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -38,9 +39,8 @@ class GroqWhisperClient(private val apiKeyProvider: () -> String) {
         prompt: String = "",
         language: String? = null
     ): Result<String> = withContext(Dispatchers.IO) {
-        val apiKey = apiKeyProvider()
-        if (apiKey.isBlank()) {
-            return@withContext Result.failure(IllegalStateException("Groq API Key is not configured."))
+        if (BACKEND_AUDIO_URL.contains("YOUR_BOLNAA_WORKER")) {
+            return@withContext Result.failure(IllegalStateException("Bolnaa backend is not configured."))
         }
 
         val requestBodyBuilder = MultipartBody.Builder()
@@ -62,8 +62,7 @@ class GroqWhisperClient(private val apiKeyProvider: () -> String) {
         }
 
         val request = Request.Builder()
-            .url(GROQ_AUDIO_URL)
-            .addHeader("Authorization", "Bearer $apiKey")
+            .url(BACKEND_AUDIO_URL)
             .post(requestBodyBuilder.build())
             .build()
 

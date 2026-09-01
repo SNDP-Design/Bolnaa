@@ -19,23 +19,17 @@ class FlowTranscriptionEngine(
             "Voice dictation in English and Hinglish (English letters only). E.g. Hello, Namaste, kya haal hai, main theek hoon, let's meet tomorrow."
     }
 
-    private var groqApiKey = ""
-    private var openAiApiKey = ""
-
-    val groqClient = GroqWhisperClient { groqApiKey }
-    val openAiClient = OpenAIWhisperClient { openAiApiKey }
+    val groqClient = GroqWhisperClient()
     val localClient = LocalSpeechClient(context)
     val smartFormatter = FlowSmartFormatter(
-        groqKeyProvider = { groqApiKey },
-        openAiKeyProvider = { openAiApiKey }
+        groqKeyProvider = { "" },
+        openAiKeyProvider = { "" }
     )
 
     suspend fun processAudioFile(
         audioFile: File,
         prompt: String = ""
     ): Result<String> {
-        groqApiKey = preferencesManager.groqApiKey.first()
-        openAiApiKey = preferencesManager.openAiApiKey.first()
         val preferredEngine = preferencesManager.sttEngine.first()
         val tone = preferencesManager.flowTone.first()
         val isAiCleanupEnabled = preferencesManager.isAiCleanupEnabled.first()
@@ -52,29 +46,13 @@ class FlowTranscriptionEngine(
         // 1. Perform Speech-to-Text
         val rawTranscriptionResult: Result<String> = when (preferredEngine) {
             SttEngine.GROQ -> {
-                if (groqApiKey.isNotBlank()) {
-                    groqClient.transcribeAudio(audioFile, effectivePrompt)
-                } else if (openAiApiKey.isNotBlank()) {
-                    openAiClient.transcribeAudio(audioFile, effectivePrompt)
-                } else {
-                    Result.failure(IllegalStateException("No Groq or OpenAI API key configured. Please configure in Settings or switch to Google Speech."))
-                }
+                groqClient.transcribeAudio(audioFile, effectivePrompt)
             }
             SttEngine.OPENAI -> {
-                if (openAiApiKey.isNotBlank()) {
-                    openAiClient.transcribeAudio(audioFile, effectivePrompt)
-                } else if (groqApiKey.isNotBlank()) {
-                    groqClient.transcribeAudio(audioFile, effectivePrompt)
-                } else {
-                    Result.failure(IllegalStateException("No OpenAI API key configured. Please configure in Settings or switch to Google Speech."))
-                }
+                groqClient.transcribeAudio(audioFile, effectivePrompt)
             }
             SttEngine.LOCAL -> {
-                if (groqApiKey.isNotBlank()) {
-                    groqClient.transcribeAudio(audioFile, effectivePrompt)
-                } else {
-                    Result.failure(IllegalStateException("Local SpeechRecognizer requires direct microphone stream."))
-                }
+                Result.failure(IllegalStateException("Local SpeechRecognizer requires direct microphone stream."))
             }
         }
 
@@ -118,8 +96,6 @@ class FlowTranscriptionEngine(
     }
 
     suspend fun formatRawText(rawText: String): String {
-        groqApiKey = preferencesManager.groqApiKey.first()
-        openAiApiKey = preferencesManager.openAiApiKey.first()
         val tone = preferencesManager.flowTone.first()
         val customVocab = preferencesManager.customVocabulary.first()
         val formatted = smartFormatter.formatTranscription(rawText, tone, customVocab)

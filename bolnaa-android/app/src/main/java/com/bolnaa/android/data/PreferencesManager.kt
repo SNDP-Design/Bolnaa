@@ -16,8 +16,6 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class PreferencesManager(private val context: Context) {
 
     companion object {
-        private val KEY_GROQ_API_KEY = stringPreferencesKey("groq_api_key")
-        private val KEY_OPENAI_API_KEY = stringPreferencesKey("openai_api_key")
         private val KEY_STT_ENGINE = stringPreferencesKey("stt_engine")
         private val KEY_FLOW_TONE = stringPreferencesKey("flow_tone")
         private val KEY_ENABLE_AI_CLEANUP = booleanPreferencesKey("enable_ai_cleanup")
@@ -49,18 +47,10 @@ class PreferencesManager(private val context: Context) {
         .catch { handleException(it) }
         .map { it[KEY_AUTO_PAUSE_FINANCIAL_APPS] ?: true }
 
-    val groqApiKey: Flow<String> = context.dataStore.data
-        .catch { handleException(it) }
-        .map { it[KEY_GROQ_API_KEY] ?: "" }
-
-    val openAiApiKey: Flow<String> = context.dataStore.data
-        .catch { handleException(it) }
-        .map { it[KEY_OPENAI_API_KEY] ?: "" }
-
     val sttEngine: Flow<SttEngine> = context.dataStore.data
         .catch { handleException(it) }
         .map {
-            val name = it[KEY_STT_ENGINE] ?: SttEngine.LOCAL.name
+            val name = it[KEY_STT_ENGINE] ?: SttEngine.GROQ.name
             try { SttEngine.valueOf(name) } catch (e: Exception) { SttEngine.LOCAL }
         }
 
@@ -128,14 +118,6 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun setFreePlacementEnabled(enabled: Boolean) {
         context.dataStore.edit { it[KEY_FREE_PLACEMENT] = enabled }
-    }
-
-    suspend fun setGroqApiKey(key: String) {
-        context.dataStore.edit { it[KEY_GROQ_API_KEY] = key.trim() }
-    }
-
-    suspend fun setOpenAiApiKey(key: String) {
-        context.dataStore.edit { it[KEY_OPENAI_API_KEY] = key.trim() }
     }
 
     suspend fun setSttEngine(engine: SttEngine) {

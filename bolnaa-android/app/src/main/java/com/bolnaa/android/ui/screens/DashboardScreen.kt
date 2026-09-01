@@ -18,13 +18,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.data.models.FlowTone
+import com.bolnaa.android.data.models.SttEngine
 import com.bolnaa.android.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -47,7 +46,6 @@ fun DashboardScreen(
     // Preferences state
     val isServiceActive by preferencesManager.isServiceActive.collectAsState(initial = true)
     val isAutoPauseFinancialApps by preferencesManager.isAutoPauseFinancialApps.collectAsState(initial = true)
-    val groqKey by preferencesManager.groqApiKey.collectAsState(initial = "")
     val isAiCleanupEnabled by preferencesManager.isAiCleanupEnabled.collectAsState(initial = true)
     val isAutoStopSilence by preferencesManager.isAutoStopSilence.collectAsState(initial = true)
     val silenceTimeoutMs by preferencesManager.silenceTimeoutMs.collectAsState(initial = 1600)
@@ -56,9 +54,9 @@ fun DashboardScreen(
     val isHapticsEnabled by preferencesManager.isHapticFeedbackEnabled.collectAsState(initial = true)
     val customVocab by preferencesManager.customVocabulary.collectAsState(initial = "")
 
-    // Keep the key-free local recognizer as the first-run default. Cloud engines
-    // remain available when configured, but should never be forced on launch.
+    // Groq Whisper runs through the secure backend configured for this build.
     LaunchedEffect(Unit) {
+        preferencesManager.setSttEngine(SttEngine.GROQ)
         preferencesManager.setFlowTone(FlowTone.NATURAL)
         preferencesManager.setAttachToKeyboardEnabled(true)
         preferencesManager.setBubbleSizeDp(64)
@@ -66,8 +64,6 @@ fun DashboardScreen(
     }
 
     // Local UI state for text fields
-    var groqInput by remember(groqKey) { mutableStateOf(groqKey) }
-    var isGroqKeyVisible by remember { mutableStateOf(false) }
     var customVocabInput by remember(customVocab) { mutableStateOf(customVocab) }
 
     val corePermissionsGranted = isOverlayPermissionGranted && isAccessibilityPermissionGranted && isMicPermissionGranted
@@ -141,80 +137,11 @@ fun DashboardScreen(
         }
         Spacer(modifier = Modifier.height(20.dp))
 
-        // ==========================================
-        // 1. GROQ WHISPER API KEY
-        // ==========================================
         Text(
-            text = "Optional Cloud AI Key",
-            style = MaterialTheme.typography.titleMedium,
-            color = FlowTextPrimary
+            text = "Groq Whisper Large v3 is connected through Bolnaa's secure backend. Your API key is never stored on this phone.",
+            style = MaterialTheme.typography.bodySmall,
+            color = FlowTextMuted
         )
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            color = FlowSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, FlowBorder)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "⚡ Groq Whisper Large v3 (Optional)",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = FlowSuccess,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Bolnaa works free without a key using Android speech recognition. Add a Groq key for faster cloud transcription and AI cleanup.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = FlowTextSecondary
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Groq API Key Input
-                OutlinedTextField(
-                    value = groqInput,
-                    onValueChange = {
-                        groqInput = it
-                        coroutineScope.launch { preferencesManager.setGroqApiKey(it) }
-                    },
-                    label = { Text("Groq API Key (optional)") },
-                    placeholder = { Text("gsk_...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    visualTransformation = if (isGroqKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { isGroqKeyVisible = !isGroqKeyVisible }) {
-                            Icon(
-                                imageVector = if (isGroqKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = null,
-                                tint = FlowTextMuted
-                            )
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = FlowPrimary,
-                        unfocusedBorderColor = FlowBorder,
-                        focusedTextColor = FlowTextPrimary,
-                        unfocusedTextColor = FlowTextPrimary,
-                        focusedContainerColor = FlowSurfaceVariant,
-                        unfocusedContainerColor = FlowSurfaceVariant
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Get your free API key at console.groq.com",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = FlowTextMuted
-                )
-            }
-        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
