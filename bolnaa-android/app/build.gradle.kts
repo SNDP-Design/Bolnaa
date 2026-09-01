@@ -14,7 +14,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
-        buildConfigField("String", "BOLNAA_BACKEND_URL", "\"https://YOUR_BOLNAA_WORKER.workers.dev/transcribe\"")
+        buildConfigField("String", "BOLNAA_BACKEND_URL", "\"https://bolnaa-api.xgrowth.workers.dev/transcribe\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
