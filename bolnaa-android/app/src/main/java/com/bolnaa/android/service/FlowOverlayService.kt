@@ -19,6 +19,7 @@ import com.bolnaa.android.ai.FlowTranscriptionEngine
 import com.bolnaa.android.audio.FlowAudioRecorder
 import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.data.models.DictationState
+import com.bolnaa.android.data.models.SttEngine
 import com.bolnaa.android.service.overlay.FloatingBubbleView
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +71,7 @@ class FlowOverlayService : Service() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var audioRecorder: FlowAudioRecorder
     private lateinit var transcriptionEngine: FlowTranscriptionEngine
+    private lateinit var localSpeechClient: com.bolnaa.android.ai.LocalSpeechClient
 
     private var bubbleView: FloatingBubbleView? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -86,6 +88,7 @@ class FlowOverlayService : Service() {
         preferencesManager = PreferencesManager(this)
         audioRecorder = FlowAudioRecorder(this)
         transcriptionEngine = FlowTranscriptionEngine(this, preferencesManager)
+        localSpeechClient = com.bolnaa.android.ai.LocalSpeechClient(this)
 
         startForegroundNotification()
         createFloatingBubble()
@@ -228,6 +231,7 @@ class FlowOverlayService : Service() {
     private var isServiceActive = true
     private var isFinancialAppInForeground = false
     private var isAutoPauseFinancialApps = true
+    private var isLocalListening = false
 
     private fun observePreferences() {
         serviceScope.launch {
@@ -377,31 +381,43 @@ class FlowOverlayService : Service() {
     }
 
     private fun startListening() {
-        val started = audioRecorder.startRecording()
-        if (!started) {
-            bubbleView?.state = DictationState.ERROR
-            serviceScope.launch {
-                delay(1500)
-                bubbleView?.state = DictationState.IDLE
-                if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
-                    bubbleView?.hideAnimated()
+        serviceScope.launch {
+            val engine = preferencesManager.sttEngine.first()
+            if (engine == SttEngine.LOCAL) {
+                val started = localSpeechClient.startListening(onResult = ::handleLocalResult)
+                if (!started) {
+                    showErrorState()
+                    return@launch
                 }
+                isLocalListening = true
+                bubbleView?.state = DictationState.LISTENING
+                return@launch
             }
-            return
-        }
 
-        bubbleView?.state = DictationState.LISTENING
+            val started = audioRecorder.startRecording()
+            if (!started) {
+                showErrorState()
+                return@launch
+            }
 
-        // Stream live amplitudes to visualizer
-        amplitudeJob?.cancel()
-        amplitudeJob = serviceScope.launch {
-            audioRecorder.amplitudeFlow.collect { amplitude ->
-                bubbleView?.setLiveAmplitude(amplitude)
+            bubbleView?.state = DictationState.LISTENING
+            amplitudeJob?.cancel()
+            amplitudeJob = serviceScope.launch {
+                audioRecorder.amplitudeFlow.collect { amplitude ->
+                    bubbleView?.setLiveAmplitude(amplitude)
+                }
             }
         }
     }
 
     private fun stopListeningAndProcess() {
+        if (isLocalListening) {
+            isLocalListening = false
+            bubbleView?.state = DictationState.PROCESSING
+            localSpeechClient.stopListening()
+            return
+        }
+
         amplitudeJob?.cancel()
         bubbleView?.state = DictationState.PROCESSING
 
@@ -455,11 +471,52 @@ class FlowOverlayService : Service() {
         }
     }
 
+    private fun handleLocalResult(result: Result<String>) {
+        if (result.isFailure) {
+            showErrorState()
+            return
+        }
+
+        val rawText = result.getOrNull().orEmpty()
+        if (rawText.isBlank()) {
+            resetBubbleAfterDelay(0)
+            return
+        }
+
+        serviceScope.launch {
+            val formattedText = transcriptionEngine.formatRawText(rawText)
+            if (formattedText.isNotBlank()) {
+                val injected = FlowAccessibilityService.getInstance()?.injectText(formattedText) ?: false
+                Log.d(TAG, "Local text injection result: $injected for: $formattedText")
+                bubbleView?.state = DictationState.SUCCESS
+                resetBubbleAfterDelay(1200)
+            } else {
+                resetBubbleAfterDelay(0)
+            }
+        }
+    }
+
+    private fun showErrorState() {
+        bubbleView?.state = DictationState.ERROR
+        resetBubbleAfterDelay(1500)
+    }
+
+    private fun resetBubbleAfterDelay(delayMs: Long) {
+        serviceScope.launch {
+            if (delayMs > 0) delay(delayMs)
+            bubbleView?.state = DictationState.IDLE
+            if (isKeyboardOnlyMode && !FlowAccessibilityService.isKeyboardVisibleFlow.value) {
+                bubbleView?.hideAnimated()
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
         amplitudeJob?.cancel()
         serviceScope.cancel()
+        localSpeechClient.stopListening()
         audioRecorder.cancelRecording()
 
         bubbleView?.let {

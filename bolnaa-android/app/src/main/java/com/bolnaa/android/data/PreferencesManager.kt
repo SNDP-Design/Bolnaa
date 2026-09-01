@@ -60,7 +60,7 @@ class PreferencesManager(private val context: Context) {
     val sttEngine: Flow<SttEngine> = context.dataStore.data
         .catch { handleException(it) }
         .map {
-            val name = it[KEY_STT_ENGINE] ?: SttEngine.GROQ.name
+            val name = it[KEY_STT_ENGINE] ?: SttEngine.LOCAL.name
             try { SttEngine.valueOf(name) } catch (e: Exception) { SttEngine.LOCAL }
         }
 

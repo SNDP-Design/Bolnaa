@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bolnaa.android.data.PreferencesManager
 import com.bolnaa.android.data.models.FlowTone
-import com.bolnaa.android.data.models.SttEngine
 import com.bolnaa.android.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -57,9 +56,9 @@ fun DashboardScreen(
     val isHapticsEnabled by preferencesManager.isHapticFeedbackEnabled.collectAsState(initial = true)
     val customVocab by preferencesManager.customVocabulary.collectAsState(initial = "")
 
-    // Ensure defaults are permanently enforced
+    // Keep the key-free local recognizer as the first-run default. Cloud engines
+    // remain available when configured, but should never be forced on launch.
     LaunchedEffect(Unit) {
-        preferencesManager.setSttEngine(SttEngine.GROQ)
         preferencesManager.setFlowTone(FlowTone.NATURAL)
         preferencesManager.setAttachToKeyboardEnabled(true)
         preferencesManager.setBubbleSizeDp(64)
@@ -146,7 +145,7 @@ fun DashboardScreen(
         // 1. GROQ WHISPER API KEY
         // ==========================================
         Text(
-            text = "Groq Whisper API Key",
+            text = "Optional Cloud AI Key",
             style = MaterialTheme.typography.titleMedium,
             color = FlowTextPrimary
         )
@@ -161,7 +160,7 @@ fun DashboardScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "⚡ Groq Whisper Large v3 (Ultra-Fast ~300ms)",
+                        text = "⚡ Groq Whisper Large v3 (Optional)",
                         style = MaterialTheme.typography.titleSmall,
                         color = FlowSuccess,
                         fontWeight = FontWeight.SemiBold
@@ -169,7 +168,7 @@ fun DashboardScreen(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "High-accuracy, sub-second voice transcription powered by Groq LPU.",
+                    text = "Bolnaa works free without a key using Android speech recognition. Add a Groq key for faster cloud transcription and AI cleanup.",
                     style = MaterialTheme.typography.bodySmall,
                     color = FlowTextSecondary
                 )
@@ -183,7 +182,7 @@ fun DashboardScreen(
                         groqInput = it
                         coroutineScope.launch { preferencesManager.setGroqApiKey(it) }
                     },
-                    label = { Text("Groq API Key") },
+                    label = { Text("Groq API Key (optional)") },
                     placeholder = { Text("gsk_...") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -896,4 +895,3 @@ private fun MasterServiceSwitchCard(
         }
     }
 }
-
